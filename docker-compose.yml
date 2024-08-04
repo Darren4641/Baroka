@@ -5,10 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: baroka:1.0.2
+    image: baroka:1.5
     container_name: baroka
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - ./pem-keys:/pem-keys
     environment:
@@ -19,6 +19,8 @@ services:
     depends_on:
       - db
     restart: always
+    networks:
+      - baroka_network
 
   db:
     image: mysql:8.0
@@ -32,6 +34,12 @@ services:
       - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - baroka_network
 
 volumes:
   db_data:
+
+networks:
+  baroka_network:
+    driver: bridge
