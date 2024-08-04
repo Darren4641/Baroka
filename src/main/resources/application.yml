@@ -1,0 +1,30 @@
+#main:
+#  banner-mode: "off"
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3307/baroka}
+    username: demo
+    password: 10041004
+  jpa:
+    properties:
+      hibernate:
+        ddl-auto: update
+    show-sql: true
+    generate-ddl: true
+
+messaging:
+  socket: true
+  encryptionEnabled: true
+  ackTime: 60000 # 1분
+  ackLimitCount: 3
+
+server:
+  port: 8080
+
+baroka:
+  path: ${BAROKA_PATH:~/baroka}
+#logging:
+#  level:
+#    root: DEBUG

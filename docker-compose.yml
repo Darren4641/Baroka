@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: baroka:1.0.2
+    container_name: baroka
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./pem-keys:/pem-keys
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/baroka
+      SPRING_DATASOURCE_USERNAME: demo
+      SPRING_DATASOURCE_PASSWORD: 10041004
+      BAROKA_PATH: ~/baroka
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: 10041004
+      MYSQL_DATABASE: baroka
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: 10041004
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

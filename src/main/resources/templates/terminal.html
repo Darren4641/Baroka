@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>SSH Terminal</title>
+    <style>
+        /* 기존 CSS 스타일 */
+        body {
+            background-color: #1e1e1e;
+            color: #c5c8c6;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+        #output {
+            flex: 1;
+            background-color: #1e1e1e;
+            color: #c5c8c6;
+            padding: 10px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 60px;
+        }
+        #input-container {
+            position: fixed;
+            bottom: 0px;
+            align-items: center;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border-top: 1px solid #5c6370;
+            box-sizing: border-box;
+            width: 100%;
+            display: flex;
+        }
+        #prompt {
+            color: #61afef;
+            margin-right: 5px;
+        }
+        #command {
+            background-color: #1e1e1e;
+            color: #c5c8c6;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            padding: 0 5px;
+            width: 100%;
+            resize: none;
+            box-sizing: border-box;
+            height: 100%;
+        }
+        #command::placeholder {
+            color: #5c6370;
+        }
+        .command-line {
+            color: #98c379;
+        }
+        .output-line {
+            color: #c5c8c6;
+        }
+        .error-line {
+            color: #e06c75;
+        }
+        #sidebar {
+            background-color: #2e2e2e;
+            width: 200px;
+            overflow-y: auto;
+            border-left: 1px solid #5c6370;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+            height: 100%;
+            transition: width 0.2s;
+        }
+        .file-icon {
+            background-color: #61afef;
+            color: #1e1e1e;
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .file-icon:hover {
+            transform: scale(1.5);
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .file-name {
+            color: #c5c8c6;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        #drag-handle {
+            width: 5px;
+            cursor: ew-resize;
+            background-color: #5c6370;
+        }
+        #input-drag-handle {
+            height: 5px;
+            cursor: ns-resize;
+            background-color: #5c6370;
+            width: 100%;
+        }
+
+        /* 모달 창 스타일 */
+        .modal {
+            /* 초기 상태에서는 보이지 않도록 설정 */
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #2e2e2e;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-sizing: border-box;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .modal-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            background: 0;
+            border-width: 0;
+            color: #fff;
+        }
+        .modal-editor {
+            width: 100%;
+            height: 400px;
+            background-color: #1e1e1e;
+            color: #c5c8c6;
+            border: none;
+            outline: none;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            background-color: #61afef;
+            color: #1e1e1e;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .modal-buttons button:hover {
+            background-color: #52a0e6;
+        }
+        .btn {
+            width: 100%;
+            color: #dad7d7;
+            background: #434343;
+            --btn-padding: 0.75rem 1.25rem;
+            --btn-border: 1px solid var(--secondary-color);
+            --btn-radius: 4px;
+            position: relative;
+            padding: var(--btn-padding);
+            color: var(--btn-color,#000);
+            background: var(--btn-bg,#fff);
+            border: var(--btn-border);
+            border-radius: var(--btn-radius);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .btn-jittery {
+            animation: jittery 4s infinite;
+        }
+        .btn-primary {
+            --btn-bg: var(--primary-color);
+            --btn-border: 1px solid var(--btn-bg);
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .run-animation {
+            animation: rotate 0.5s ease-in-out;
+        }
+        .styled-delete-btn {
+            background-color: #e74c3c; /* 배경색 */
+            color: white; /* 텍스트 색상 */
+            border: none; /* 테두리 제거 */
+            border-radius: 50%; /* 둥근 모서리 */
+            width: 15px; /* 버튼 너비 */
+            height: 14px; /* 버튼 높이 */
+            display: flex; /* 내부 요소를 가운데 정렬하기 위해 flex 사용 */
+            align-items: center; /* 세로 중앙 정렬 */
+            justify-content: center; /* 가로 중앙 정렬 */
+            cursor: pointer; /* 커서 포인터로 변경 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+            transition: background-color 0.3s, transform 0.3s; /* 배경색 및 변형 애니메이션 추가 */
+            font-size: 9px; /* 글자 크기 */
+            margin-left: 5px;
+        }
+
+        .styled-delete-btn:hover {
+            background-color: #c0392b; /* 호버 시 배경색 변경 */
+            transform: scale(1.1); /* 호버 시 버튼 확대 */
+        }
+
+        .styled-delete-btn:active {
+            background-color: #a93226; /* 클릭 시 배경색 변경 */
+            transform: scale(1.05); /* 클릭 시 버튼 약간 축소 */
+        }
+
+        .styled-delete-btn:focus {
+            outline: none; /* 포커스 시 아웃라인 제거 */
+        }
+    </style>
+    <script th:inline="javascript">
+        let isInterrupted = false;
+        let socket;
+        let currentPath = "~"; // 초기 경로
+        let savePath = currentPath;
+        let isBaroka = false;
+        let barokaPath = [[${barokaPath}]];
+        const username = [[${username}]]; // 타임리프를 통해 서버에서 사용자 이름을 전달받음
+        const sessionId = [[${sessionId}]]; // 타임리프를 통해 서버에서 세션 ID를 전달받음
+        let autoScroll = true; // 스크롤 자동 이동 여부를 관리하는 플래그
+
+        function connectWebSocket() {
+            socket = new WebSocket("ws://" + window.location.host + "/terminal");
+
+            socket.onopen = function() {
+                console.log("WebSocket connection established");
+                const enterMessage = {
+                    session: sessionId,
+                    messageType: "ENTER"
+                };
+                socket.send(JSON.stringify(enterMessage));
+                appendOutput("SSH Session Connected\n", 'output-line');
+            };
+
+            socket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                if (message.messageType === "RESULT") {
+                    if (!isInterrupted) {
+                        appendOutput(message.data, 'output-line');
+                    }
+                } else if (message.messageType === "VI") {
+                    openEditor(message.data);
+                } else if(message.messageType === "VI_CONTENT") {
+                    console.log("content = " + message.data);
+                    document.getElementById('modalEditor').value = message.data;
+                } else if (message.messageType === "PATH") {
+                    currentPath = message.data;
+                    updatePrompt();
+                } else if (message.messageType === "AUTOCOMPLETE") {
+                    handleAutocomplete(message.data);
+                } else if (message.messageType === "EXIT") {
+                    window.location.href = "/";
+                }
+            };
+
+            socket.onclose = function() {
+                console.log("WebSocket connection closed");
+            };
+
+            socket.onerror = function(error) {
+                console.log("WebSocket error: " + error.message);
+            };
+        }
+
+        function sendCommand() {
+            const commandInput = document.getElementById('command');
+            const command = commandInput.value;
+            if (command.trim() !== "") {
+                isInterrupted = false;
+                if (command.trim() === "clear") {
+                    clearOutput();
+                } else {
+                    const commandMessage = {
+                        session: sessionId,
+                        messageType: "COMMAND",
+                        data: command
+                    };
+                    socket.send(JSON.stringify(commandMessage));
+                    commandInput.value = "";
+                    commandInput.focus();
+                    autoScroll = true;
+                }
+            }
+        }
+
+        function appendOutput(text, type = 'output-line') {
+            const outputArea = document.getElementById('output');
+            const newElement = document.createElement('div');
+            newElement.textContent = text;
+            newElement.classList.add(type);
+            outputArea.appendChild(newElement);
+
+            const isScrolledToBottom = outputArea.scrollHeight - outputArea.clientHeight <= outputArea.scrollTop + 1;
+            if (autoScroll || isScrolledToBottom) {
+                scrollToBottom();
+            }
+        }
+
+        function clearOutput() {
+            const commandInput = document.getElementById('command');
+            const outputArea = document.getElementById('output');
+            outputArea.innerHTML = '';
+            commandInput.value = "";
+            commandInput.focus();
+        }
+
+        function getPrompt() {
+            return `${username}@${currentPath}$`;
+        }
+
+        function updatePrompt() {
+            document.getElementById('prompt').textContent = getPrompt();
+        }
+
+        function scrollToBottom() {
+            const outputArea = document.getElementById('output');
+            outputArea.scrollTop = outputArea.scrollHeight;
+        }
+
+        function handleAutocomplete(data) {
+            const commandInput = document.getElementById('command');
+            const currentCommand = commandInput.value;
+            const autoCompleteOptions = data.split("\n").filter(opt => opt.trim() !== "");
+
+            if (autoCompleteOptions.length === 1) {
+                const commandParts = currentCommand.trim().split(" ");
+                commandParts[commandParts.length - 1] = autoCompleteOptions[0];
+                commandInput.value = commandParts.join(" ") + " ";
+            } else if (autoCompleteOptions.length > 0) {
+                appendOutput(autoCompleteOptions.join("\n"), 'output-line');
+            }
+
+            commandInput.focus();
+        }
+
+        window.onload = function() {
+            connectWebSocket();
+            document.getElementById('command').focus();
+            updatePrompt();
+
+            const dragHandle = document.getElementById('drag-handle');
+            dragHandle.addEventListener('mousedown', initDrag);
+
+            const inputDragHandle = document.getElementById('input-drag-handle');
+            inputDragHandle.addEventListener('mousedown', initInputDrag);
+        };
+
+        window.onbeforeunload = function() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const exitMessage = {
+                    session: sessionId,
+                    messageType: "EXIT",
+                    data: "exit"
+                };
+                socket.send(JSON.stringify(exitMessage));
+                socket.close();
+            }
+        };
+        document.addEventListener('keydown', function(event) {
+            const commandInput = document.getElementById('command');
+            const modalEditor = document.getElementById('modalEditor');
+
+            if (event.target === commandInput) {
+                if (event.key === 'Enter') {
+                    if (event.shiftKey) {
+                        event.preventDefault();
+                        const start = commandInput.selectionStart;
+                        const end = commandInput.selectionEnd;
+                        commandInput.value = commandInput.value.substring(0, start) + '\n' + commandInput.value.substring(end);
+                        commandInput.selectionStart = commandInput.selectionEnd = start + 1;
+                        commandInput.focus();
+                    } else {
+                        event.preventDefault();
+                        sendCommand();
+                    }
+                } else if (event.key === 'Tab') {
+                    event.preventDefault();
+                    autocomplete(commandInput);
+                } else if (event.ctrlKey && event.key === 'c') {
+                    event.preventDefault();
+                    isInterrupted = true;
+                    sendSignal('SIGINT');
+                }
+            } else if (event.target === modalEditor) {
+                // 텍스트 영역에서는 기본 동작을 막지 않도록 함
+                if (event.key === 'Enter') {
+                    // 기본 동작으로 엔터키를 처리하도록 놔둠
+                }
+            }
+        });
+
+        document.addEventListener('input', function(event) {
+            if (event.target.id === 'command') {
+                const textarea = event.target;
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+        });
+
+        document.getElementById('output').addEventListener('scroll', function() {
+            const outputArea = document.getElementById('output');
+            const isScrolledToBottom = outputArea.scrollHeight - outputArea.clientHeight <= outputArea.scrollTop + 1;
+            autoScroll = isScrolledToBottom;
+        });
+
+        function autocomplete(commandInput) {
+            const command = commandInput.value;
+            if (command.trim() !== "") {
+                const commandMessage = {
+                    session: sessionId,
+                    messageType: "AUTOCOMPLETE",
+                    data: command
+                };
+                socket.send(JSON.stringify(commandMessage));
+            }
+        }
+
+        function sendSignal(signal) {
+            const signalMessage = {
+                session: sessionId,
+                messageType: "SIGNAL",
+                data: signal
+            };
+            socket.send(JSON.stringify(signalMessage));
+        }
+
+        function initDrag(e) {
+            startX = e.clientX;
+            startWidth = parseInt(document.defaultView.getComputedStyle(sidebar).width, 10);
+            document.documentElement.addEventListener('mousemove', doDrag);
+            document.documentElement.addEventListener('mouseup', stopDrag);
+        }
+
+        function doDrag(e) {
+            let newWidth = startWidth - (e.clientX - startX);
+            const minWidth = 200;
+
+            if (newWidth < minWidth) {
+                newWidth = minWidth;
+            }
+
+            sidebar.style.width = newWidth + 'px';
+        }
+
+        function stopDrag(e) {
+            document.documentElement.removeEventListener('mousemove', doDrag);
+            document.documentElement.removeEventListener('mouseup', stopDrag);
+        }
+
+        function initInputDrag(e) {
+            const inputContainer = document.getElementById('input-container');
+            const outputContainer = document.getElementById('output');
+            const startY = e.clientY;
+            const startHeight = parseInt(document.defaultView.getComputedStyle(inputContainer).height, 10);
+            const startOutputHeight = parseInt(document.defaultView.getComputedStyle(outputContainer).height, 10);
+            document.documentElement.addEventListener('mousemove', doInputDrag);
+            document.documentElement.addEventListener('mouseup', stopInputDrag);
+
+            function doInputDrag(e) {
+                let newHeight = startHeight + (startY - e.clientY);
+                const minHeight = 40;
+                const maxHeight = window.innerHeight - minHeight;
+
+                if (newHeight < minHeight) {
+                    newHeight = minHeight;
+                } else if (newHeight > maxHeight) {
+                    newHeight = maxHeight;
+                }
+
+                inputContainer.style.height = newHeight + 'px';
+                outputContainer.style.height = (startOutputHeight - (newHeight - startHeight)) + 'px';
+            }
+
+            function stopInputDrag(e) {
+                document.documentElement.removeEventListener('mousemove', doInputDrag);
+                document.documentElement.removeEventListener('mouseup', stopInputDrag);
+            }
+        }
+
+        function openEditor(fileName, element) {
+            document.getElementById('editModal').style.display = 'flex';
+            const modalTitle = document.getElementById('modalTitle');
+            console.log("@: " + fileName);
+            if (fileName) {
+                if(fileName === 'baroka') {
+                    console.log("@: baroka here");
+                    modalTitle.value = fileName + '.sh';
+                    if(element) {
+                        fileName = element.textContent || element.innerText;
+                        modalTitle.value = fileName;
+                    }
+                    fetchFileContent(fileName, barokaPath);
+                    savePath = barokaPath;
+                    isBaroka = true;
+                }else {
+                    modalTitle.value = fileName;
+                    modalTitle.ariaPlaceholder = fileName;
+                    fetchFileContent(fileName, currentPath);
+                    savePath = currentPath;
+                    isBaroka = false;
+                }
+            } else {
+                modalTitle.ariaPlaceholder = "Untitled";
+                document.getElementById('modalEditor').value = ""; // 비어있는 경우
+                savePath = currentPath;
+                isBaroka = false;
+            }
+
+            document.getElementById('modalTitle').focus();
+        }
+
+        function closeEditor() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function fetchFileContent(title, currentPath) {
+            // 서버로부터 파일 내용을 가져오는 로직
+            // 예: WebSocket을 사용하여 파일 내용을 요청하고 받음
+            const vi = {
+                title: title,
+                remoteDir: currentPath
+            }
+            const message = {
+                session: sessionId,
+                messageType: "VI_CONTENT",
+                data: JSON.stringify(vi)
+            };
+            socket.send(JSON.stringify(message));
+        }
+
+        function quit() {
+            closeEditor();
+        }
+
+        function saveAndQuit() {
+            const title = document.getElementById('modalTitle').value;
+            const content = document.getElementById('modalEditor').value;
+            const vi = {
+                operation: "SAVE",
+                title: title,
+                content: content,
+                remoteDir: savePath,
+                isBaroka: isBaroka
+            }
+            const message = {
+                session: sessionId,
+                messageType: "VI_OPERATION",
+                data: JSON.stringify(vi)
+            };
+            socket.send(JSON.stringify(message));
+            alert("저장되었습니다.");
+            closeEditor();
+            updateFileList();
+        }
+
+        function updateFileList() {
+            fetch(`/file-list?sessionId=${sessionId}`)
+                .then(response => response.text())
+                .then(html => {
+                    console.log(html); // 받은 HTML 조각을 로그로 확인
+                    document.getElementById('file-list').innerHTML = html;
+                });
+        }
+
+        function runScript(element, scriptName) {
+            element.classList.add('run-animation');
+            setTimeout(() => {
+                element.classList.remove('run-animation');
+            }, 500); // 애니메이션 시간과 일치하도록 설정
+
+            const command = `${barokaPath}/${scriptName}`;
+            const commandMessage = {
+                session: sessionId,
+                messageType: "COMMAND",
+                data: command
+            };
+            socket.send(JSON.stringify(commandMessage));
+            autoScroll = true;
+        }
+
+        function confirmDelete(fileName) {
+            const confirmAction = confirm(`Are you sure you want to delete ${fileName}?`);
+            if (confirmAction) {
+                deleteFile(fileName);
+            }
+        }
+
+        function deleteFile(fileName) {
+            const command = `rm -rf ${barokaPath}/${fileName}`;
+            const commandMessage = {
+                session: sessionId,
+                messageType: "COMMAND",
+                data: command
+            };
+            socket.send(JSON.stringify(commandMessage));
+            updateFileList(); // 파일 목록 업데이트
+        }
+    </script>
+</head>
+<body>
+<div id="container">
+    <div id="output">
+        <!-- 명령어와 결과가 위에서부터 쌓입니다. -->
+    </div>
+    <div id="input-drag-handle"></div>
+    <div id="input-container">
+        <span id="prompt"></span>
+        <textarea id="command" placeholder="Enter command" rows="1"></textarea>
+    </div>
+</div>
+<div id="drag-handle"></div>
+<div id="sidebar">
+    <div id="file-list" th:fragment="file-list">
+        <div class="file-item" th:each="barokaFile, iterStat : ${barokaFiles}">
+            <div class="file-icon"
+                 th:barokaFile="${barokaFile}"
+                 th:style="'background-color:' + ${colors[iterStat.index]}"
+                 th:text="${#strings.substring(barokaFile, 0, 1)}"
+                 onclick="runScript(this, this.getAttribute('barokaFile'))"></div>
+            <div class="file-name" th:text="${barokaFile}" onclick="openEditor('baroka', this)"></div>
+            <button th:barokaFile="${barokaFile}"
+                    class="styled-delete-btn"
+                    onclick="confirmDelete(this.getAttribute('barokaFile'))">X</button>
+        </div>
+        <div class="file-item">
+            <button class="btn btn-primary btn-jittery" onclick="openEditor('baroka')">Add Script</button>
+        </div>
+    </div>
+</div>
+
+<!-- 모달 창 -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <input class="modal-title" id="modalTitle" value="Untitled">
+        <textarea id="modalEditor" class="modal-editor" rows="20"></textarea>
+        <div class="modal-buttons">
+            <button onclick="quit()">나가기</button>
+            <button onclick="saveAndQuit()">저장 후 나가기</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Baroka SSH 접속</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+            position: relative;
+        }
+        .container {
+            max-width: 100%;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        pre {
+            font-size: 14px;
+            background: #333;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group input[type="number"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group button {
+            background-color: #414142;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-header,
+        .modal-body,
+        .modal-footer {
+            padding: 2px 16px;
+        }
+        .modal-footer {
+            text-align: right;
+        }
+        .floating-container {
+            position: relative;
+            left: 20px; /* 왼쪽 여백 */
+            top: 20px; /* 상단 여백 */
+            width: 35em;
+            height: 200px;
+            border: 2px dashed #b3b2b2;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 0;
+            float: left;
+            margin-right: 20px;
+            margin-bottom: 20px;
+        }
+        .floating-btn {
+            font-size: 36px;
+            color: #333;
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .floating-btn:hover {
+            background-color: #ecf0f1;
+        }
+        .selection-menu {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            width: 150px;
+            top: 70px; /* + 버튼의 위쪽 */
+            left: 0; /* + 버튼의 왼쪽 */
+        }
+        .selection-menu button {
+            display: block;
+            margin: 0 auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            width: 70%;
+            padding: 10px;
+            border: none;
+            background-color: #333;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .selection-menu button:hover {
+            background-color: #555;
+        }
+        .data {
+
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+
+            box-sizing: border-box;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+
+        .card {
+            width: 100%;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .card p {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .card p strong {
+            color: #333;
+        }
+        /* 삭제 버튼 스타일 */
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>
+            <pre>
+  _                   _          ___  ___  _ _
+| |_  ___  _ _  ___ | |__ ___  / __>/ __>| | |
+| . \<_> || '_>/ . \| / /<_> | \__ \\__ \|   |
+|___/<___||_|  \___/|_\_\<___| <___/<___/|_|_|
+            </pre>
+    </h1>
+
+    <div id="itemList">
+        <!-- 목록 항목이 여기에 동적으로 추가됩니다. -->
+    </div>
+</div>
+
+<!-- 선택 모달 창 -->
+<div id="selectModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close" id="selectModalClose">&times;</span>
+            <h2>선택</h2>
+        </div>
+        <div class="modal-body">
+            <button id="showSshModal" class="form-group button">SSH 접속</button>
+            <button id="showTunnelModal" class="form-group button">SSH 터널링</button>
+        </div>
+    </div>
+</div>
+
+<!-- SSH 접속 모달 창 -->
+<div id="sshModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close" id="sshModalClose">&times;</span>
+            <h2>SSH 접속</h2>
+        </div>
+        <div class="modal-body">
+            <form id="sshForm" method="post" th:action="@{/connect}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="id">ID</label>
+                    <input type="text" id="id" name="id" required/>
+                </div>
+                <div class="form-group">
+                    <label for="username">사용자명</label>
+                    <input type="text" id="username" name="username" required/>
+                </div>
+                <div class="form-group">
+                    <label for="host">호스트</label>
+                    <input type="text" id="host" name="host" required/>
+                </div>
+                <div class="form-group">
+                    <label for="port">포트</label>
+                    <input type="number" id="port" name="port" required/>
+                </div>
+                <!-- 인증 방식 선택 라디오 버튼 -->
+                <div class="form-group">
+                    <input type="radio" id="usePassword" name="authType" value="password"/>
+                    <label for="usePassword">비밀번호 사용</label>
+                    <input type="radio" id="usePemKey" name="authType" value="pemKey"/>
+                    <label for="usePemKey">PEM 키 사용</label>
+                    <input type="radio" id="usePemPathKey" name="authType" value="pemKeyPath" style="display:none;"/>
+                    <label for="usePemPathKey" style="display:none;">PEM Path 사용</label>
+                </div>
+                <!-- 비밀번호 입력 필드 -->
+                <div class="form-group" id="passwordField" style="display:none;">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password"/>
+                </div>
+                <!-- PEM 키 입력 필드 -->
+                <div class="form-group" id="pemKeyField" style="display:none;">
+                    <label for="pemKey">PEM 키</label>
+                    <input type="file" id="pemKey" name="pemKey" accept=".pem"/>
+                </div>
+                <div class="form-group" id="pemKeyPathField" style="display:none;">
+                    <label for="pemKeyPath">PEM 키 경로</label>
+                    <input type="text" id="pemKeyPath" name="pemKeyPath" readonly/>
+                </div>
+                <div class="form-group">
+                    <button type="submit">연결</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- 터널링 모달 창 -->
+<div id="tunnelModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close" id="tunnelModalClose">&times;</span>
+            <h2>SSH 터널링</h2>
+        </div>
+        <div class="modal-body">
+            <form id="tunnelForm" th:action="@{/tunnel}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="tunnelId">ID</label>
+                    <input type="text" id="tunnelId" name="id" required/>
+                </div>
+                <!-- 터널링 설정을 위한 정보 -->
+                <div class="form-group">
+                    <label for="tunnelHost">터널링 호스트 (Bastion 서버 IP)</label>
+                    <input type="text" id="tunnelHost" name="tunnelHost" required/>
+                </div>
+                <div class="form-group">
+                    <label for="tunnelHost">터널링 포트 (Bastion 서버 Port)</label>
+                    <input type="text" id="tunnelPort" name="tunnelPort" required/>
+                </div>
+                <div class="form-group">
+                    <label for="tunnelUsername">터널링 사용자명</label>
+                    <input type="text" id="tunnelUsername" name="tunnelUsername" required/>
+                </div>
+                <!-- 인증 방식 선택 라디오 버튼 -->
+                <div class="form-group">
+                    <input type="radio" id="useTunnelPassword" name="tunnelAuthType" value="password"/>
+                    <label for="usePassword">비밀번호 사용</label>
+                    <input type="radio" id="useTunnelPemKey" name="tunnelAuthType" value="pemKey"/>
+                    <label for="usePemKey">PEM 키 사용</label>
+                    <input type="radio" id="useTunnelPemPathKey" name="tunnelAuthType" value="pemKeyPath" style="display:none;"/>
+                    <label for="usePemPathKey" style="display:none;">PEM Path 사용</label>
+                </div>
+                <!-- 비밀번호 입력 필드 -->
+                <div class="form-group" id="tunnelPasswordField" style="display:none;">
+                    <label for="tunnelPassword">비밀번호</label>
+                    <input type="text" id="tunnelPassword" name="tunnelPassword"/>
+                </div>
+                <!-- PEM 키 입력 필드 -->
+                <div class="form-group" id="tunnelPemKeyField" style="display:none;">
+                    <label for="tunnelPemKey">터널링 PEM 키</label>
+                    <input type="file" id="tunnelPemKey" name="tunnelPemKey" accept=".pem"/>
+                </div>
+                <div class="form-group" id="tunnelPemKeyPathField" style="display:none;">
+                    <label for="tunnelPemKeyPath">PEM 키 경로</label>
+                    <input type="text" id="tunnelPemKeyPath" name="tunnelPemKeyPath" readonly/>
+                </div>
+
+                <div class="form-group">
+                    <label for="localPort">로컬 포트</label>
+                    <input type="number" id="localPort" name="localPort" required/>
+                </div>
+                <div class="form-group">
+                    <label for="remoteHost">원격 호스트 (목적지 서버 IP)</label>
+                    <input type="text" id="remoteHost" name="remoteHost" required/>
+                </div>
+                <div class="form-group">
+                    <label for="remotePort">원격 포트 (목적지 서버 포트)</label>
+                    <input type="number" id="remotePort" name="remotePort" required/>
+                </div>
+                <!-- 최종 서버 접속을 위한 정보 -->
+                <div class="form-group">
+                    <label for="destinationUsername">목적지 서버 사용자명</label>
+                    <input type="text" id="destinationUsername" name="destinationUsername" required/>
+                </div>
+                <!-- 인증 방식 선택 라디오 버튼 -->
+                <div class="form-group">
+                    <input type="radio" id="useDestinationPassword" name="authType" value="password"/>
+                    <label for="usePassword">비밀번호 사용</label>
+                    <input type="radio" id="useDestinationPemKey" name="authType" value="pemKey"/>
+                    <label for="usePemKey">PEM 키 사용</label>
+                    <input type="radio" id="useDestinationPemPathKey" name="authType" value="pemKeyPath" style="display:none;"/>
+                    <label for="usePemPathKey" style="display:none;">PEM Path 사용</label>
+                </div>
+                <!-- 비밀번호 입력 필드 -->
+                <div class="form-group" id="destinationPasswordField" style="display:none;">
+                    <label for="destinationPassword">비밀번호</label>
+                    <input type="text" id="destinationPassword" name="destinationPassword"/>
+                </div>
+                <!-- PEM 키 입력 필드 -->
+                <div class="form-group" id="destinationPemKeyField" style="display:none;">
+                    <label for="destinationPemKey">터널링 PEM 키</label>
+                    <input type="file" id="destinationPemKey" name="destinationPemKey" accept=".pem"/>
+                </div>
+                <div class="form-group" id="destinationPemKeyPathField" style="display:none;">
+                    <label for="destinationPemKeyPath">PEM 키 경로</label>
+                    <input type="text" id="destinationPemKeyPath" name="destinationPemKeyPath" readonly/>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit">연결</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="floating-container data" style="background: #3333331c" th:each="host : ${hostList}"
+     th:data-id="${host.id}"
+     th:data-host="${host.serverHost}"
+     th:data-port="${host.serverPort}"
+     th:data-username="${host.username}"
+     th:data-password="${host.password}"
+     th:data-pem="${host.pem}"
+     th:data-tunnel-host="${host.tunnelHost}"
+     th:data-local-port="${host.localPort}"
+     th:data-tunnel-username="${host.tunnelUsername}"
+     th:data-tunnel-password="${host.tunnelPassword}"
+     th:data-tunnel-port="${host.tunnelPort}"
+     th:data-tunnel-pem="${host.tunnelPem}"
+     onclick="openSshModal(this)">
+    <div class="card">
+        <h3 th:text="${host.id}"></h3>
+        <hr>
+        <p><strong>Host:</strong> <span th:text="${host.serverHost}"></span></p>
+        <p><strong>Port:</strong> <span th:text="${host.serverPort}"></span> <span th:if="${host.tunnelPort != null && host.tunnelPort != ''}" th:text="'(Local: ' + ${host.tunnelPort} + ')'"></span></p>
+        <p><strong>Username:</strong> <span th:text="${host.username}"></span></p>
+        <p th:if="${host.password != null && host.password != ''}"><strong style="color: #f00">Using Password</strong></p>
+        <p th:if="${host.pem != null && host.pem != ''}"><strong style="color: #f00">Using Pem</strong></p>
+    </div>
+    <button th:id="${host.idx}"
+            th:title="${host.id}"
+            class="delete-btn" onclick="event.stopPropagation(); confirmDelete(id, title)">Delete</button>
+</div>
+
+<!-- 점선 영역과 + 버튼 -->
+<div class="floating-container">
+    <button class="floating-btn">+</button>
+    <div class="selection-menu" id="selectionMenu">
+        <button id="showSshModalFromMenu" class="form-group button">단순 SSH 접속</button>
+        <button id="showTunnelModalFromMenu" class="form-group button">SSH 터널링</button>
+    </div>
+</div>
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close" id="deleteModalClose">&times;</span>
+            <h2>삭제 확인</h2>
+        </div>
+        <div class="modal-body">
+            <p>정말 삭제하시겠습니까?</p>
+            <div class="modal-footer">
+                <button id="confirmDeleteBtn">삭제</button>
+                <button id="cancelDeleteBtn">취소</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    var error = [[${error}]];
+    if (error) {
+        alert(error);
+    }
+    // 모달 창 관련 변수
+    var selectModal = document.getElementById("selectModal");
+    var sshModal = document.getElementById("sshModal");
+    var tunnelModal = document.getElementById("tunnelModal");
+    var openSelectModal = document.querySelector(".floating-btn");
+    var selectModalClose = document.getElementById("selectModalClose");
+    var sshModalClose = document.getElementById("sshModalClose");
+    var tunnelModalClose = document.getElementById("tunnelModalClose");
+    var sshModalCancel = document.getElementById("sshModalCancel");
+    var tunnelModalCancel = document.getElementById("tunnelModalCancel");
+    var showSshModalFromMenu = document.getElementById("showSshModalFromMenu");
+    var showTunnelModalFromMenu = document.getElementById("showTunnelModalFromMenu");
+    var selectionMenu = document.getElementById("selectionMenu");
+
+
+
+
+    // 라디오 버튼 클릭 시 비밀번호와 PEM 키 필드 상태 업데이트
+    document.getElementById('usePassword').addEventListener('click', updateAuthFields);
+    document.getElementById('usePemKey').addEventListener('click', updateAuthFields);
+
+    document.getElementById('useTunnelPassword').addEventListener('click', updateTunnelAuthFields);
+    document.getElementById('useTunnelPemKey').addEventListener('click', updateTunnelAuthFields);
+
+    document.getElementById('useDestinationPassword').addEventListener('click', updateDestinationAuthFields);
+    document.getElementById('useDestinationPemKey').addEventListener('click', updateDestinationAuthFields);
+    function openSshModal(element) {
+
+        var id = element.getAttribute("data-id");
+        var host = element.getAttribute("data-host");
+        var port = element.getAttribute("data-port");
+        var username = element.getAttribute("data-username");
+        var password = element.getAttribute("data-password");
+        var pem = element.getAttribute("data-pem");
+        var tunnel_host = element.getAttribute("data-tunnel-host");
+        var local_port = element.getAttribute("data-local-port");
+        var tunnel_username = element.getAttribute("data-tunnel-username");
+        var tunnel_port = element.getAttribute("data-tunnel-port");
+        var tunnel_password = element.getAttribute("data-tunnel-password");
+        var tunnel_pem = element.getAttribute("data-tunnel-pem");
+
+
+
+        if(tunnel_host && tunnel_host.trim() !== "") {
+            var form = document.getElementById("tunnelForm");
+            document.getElementById("tunnelId").value = id;
+            document.getElementById("tunnelHost").value = tunnel_host;
+            document.getElementById("tunnelPort").value = tunnel_port;
+            document.getElementById("tunnelUsername").value = tunnel_username;
+            document.getElementById("localPort").value = local_port;
+            document.getElementById("remoteHost").value = host;
+            document.getElementById("remotePort").value = port;
+            document.getElementById("destinationUsername").value = username;
+
+            if(tunnel_password) {
+                document.getElementById("useTunnelPassword").checked = true;
+                document.getElementById("tunnelPasswordField").style.display = "block";
+                document.getElementById("tunnelPemKeyField").style.display = "none";
+                document.getElementById("tunnelPemKeyPathField").style.display = "none";
+                document.getElementById("tunnelPassword").value = tunnel_password;
+                document.getElementById("tunnelPemKeyPath").value = null;
+            }else if(tunnel_pem) {
+                console.log("@@@");
+                document.getElementById("useTunnelPemPathKey").checked = true;
+                document.getElementById("useTunnelPemPathKey").style.display = "block";
+                document.getElementById("tunnelPemKeyPathField").style.display = "block";
+                document.getElementById("tunnelPemKeyField").style.display = "none";
+                document.getElementById("tunnelPasswordField").style.display = "none";
+                document.getElementById("tunnelPemKeyPath").value = tunnel_pem;
+                document.getElementById("tunnelPassword").value = null;
+            }
+
+            if(password) {
+                document.getElementById("useDestinationPassword").checked = true;
+                document.getElementById("destinationPasswordField").style.display = "block";
+                document.getElementById("destinationPemKeyField").style.display = "none";
+                document.getElementById("destinationPassword").value = password;
+                document.getElementById("destinationPemKeyPath").value = null;
+            }else if(pem) {
+                document.getElementById("useDestinationPemPathKey").checked = true;
+                document.getElementById("useDestinationPemPathKey").style.display = "block";
+                document.getElementById("destinationPemKeyPathField").style.display = "block";
+                document.getElementById("destinationPemKeyField").style.display = "none";
+                document.getElementById("destinationPasswordField").style.display = "none";
+                document.getElementById("destinationPemKeyPath").value = pem;
+                document.getElementById("destinationPassword").value = null;
+            }
+            form.action = '/tunnelWithPath';
+            var tunnelModal = document.getElementById("tunnelModal");
+            tunnelModal.style.display = "block";
+        } else {
+            var form = document.getElementById("sshForm");
+            document.getElementById("id").value = id;
+            document.getElementById("host").value = host;
+            document.getElementById("port").value = port;
+            document.getElementById("username").value = username;
+            if (password) {
+                document.getElementById("usePassword").checked = true;
+                document.getElementById("passwordField").style.display = "block";
+                document.getElementById("pemKeyField").style.display = "none";
+                document.getElementById("password").value = password;
+                document.getElementById("pemKeyPath").value = null;
+            } else if (pem) {
+                document.getElementById("usePemPathKey").checked = true;
+                document.getElementById("usePemPathKey").style.display = "block";
+                document.getElementById("pemKeyField").style.display = "none";
+                document.getElementById("passwordField").style.display = "none";
+                document.getElementById("pemKeyPathField").style.display = "block";
+                document.getElementById("pemKeyPath").value = pem;
+                document.getElementById("password").value = null;
+            }
+            form.action = '/connectWithPath';
+            var sshModal = document.getElementById("sshModal");
+            sshModal.style.display = "block";
+        }
+
+    }
+
+    function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = "none";
+            clearModalFields(); // 모달 필드 초기화 함수 호출
+        }
+    }
+
+    function clearModalFields() {
+        // 모든 입력 필드 초기화
+        document.getElementById("sshForm").reset();
+        document.getElementById("tunnelForm").reset();
+        document.getElementById("passwordField").style.display = "none";
+        document.getElementById("pemKeyField").style.display = "none";
+        document.getElementById("pemKeyPathField").style.display = "none";
+        document.getElementById("usePemPathKey").style.display = "none";
+        document.getElementById("useDestinationPemPathKey").style.display = "none";
+        document.getElementById("destinationPemKeyPathField").style.display = "none";
+        document.getElementById("useTunnelPemPathKey").style.display = "none";
+        document.getElementById("tunnelPemKeyPathField").style.display = "none";
+    }
+
+    document.getElementById("sshModalClose").onclick = function() {
+        closeModal("sshModal");
+    };
+
+    // 모달 외부를 클릭할 때 모달을 닫는 기능
+    window.onclick = function(event) {
+        var sshModal = document.getElementById("sshModal");
+        if (event.target === sshModal) {
+            closeModal("sshModal");
+        }
+    };
+    // 선택 창 열기/닫기
+    openSelectModal.onclick = function(event) {
+        event.stopPropagation(); // 클릭 이벤트가 부모로 전파되지 않도록
+        if (selectionMenu.style.display === "block") {
+            selectionMenu.style.display = "none";
+        } else {
+            selectionMenu.style.display = "block";
+        }
+    }
+
+    // 선택 창 닫기
+    window.onclick = function(event) {
+        if (event.target !== openSelectModal && event.target !== selectionMenu && !selectionMenu.contains(event.target)) {
+            selectionMenu.style.display = "none";
+        }
+    }
+
+    // SSH 모달 열기
+    showSshModalFromMenu.onclick = function() {
+        selectionMenu.style.display = "none";
+        sshModal.style.display = "block";
+        updateAuthFields();
+    }
+
+    // 터널링 모달 열기
+    showTunnelModalFromMenu.onclick = function() {
+        selectionMenu.style.display = "none";
+        tunnelModal.style.display = "block";
+    }
+
+    // 모달 닫기
+    sshModalClose.onclick = function() {
+        sshModal.style.display = "none";
+        clearModalFields();
+    }
+    tunnelModalClose.onclick = function() {
+        tunnelModal.style.display = "none";
+        clearModalFields();
+    }
+    sshModalCancel.onclick = function() {
+        sshModal.style.display = "none";
+        clearModalFields();
+    }
+    tunnelModalCancel.onclick = function() {
+        tunnelModal.style.display = "none";
+        clearModalFields();
+    }
+
+    function updateAuthFields() {
+        var usePassword = document.getElementById('usePassword');
+        var passwordField = document.getElementById('passwordField');
+        var usePemKey = document.getElementById('usePemKey');
+        var pemKeyField = document.getElementById('pemKeyField');
+
+        if (usePassword.checked) {
+            passwordField.style.display = 'block';
+            pemKeyField.style.display = 'none';
+            usePemKey.value = '';
+        } else if (usePemKey.checked) {
+            pemKeyField.style.display = 'block';
+            passwordField.style.display = 'none';
+        } else {
+            passwordField.style.display = 'none';
+            pemKeyField.style.display = 'none';
+        }
+    }
+
+    function updateTunnelAuthFields() {
+        var useTunnelPassword = document.getElementById('useTunnelPassword');
+        var tunnelPasswordField = document.getElementById('tunnelPasswordField');
+        var useTunnelPemKey = document.getElementById('useTunnelPemKey');
+        var tunnelPemKeyField = document.getElementById('tunnelPemKeyField');
+
+        if (useTunnelPassword.checked) {
+            tunnelPasswordField.style.display = 'block';
+            tunnelPemKeyField.style.display = 'none';
+            useTunnelPemKey.value = '';
+        } else if (useTunnelPemKey.checked) {
+            tunnelPemKeyField.style.display = 'block';
+            tunnelPasswordField.style.display = 'none';
+        } else {
+            tunnelPasswordField.style.display = 'none';
+            tunnelPemKeyField.style.display = 'none';
+        }
+    }
+
+    function updateDestinationAuthFields() {
+        var useDestinationPassword = document.getElementById('useDestinationPassword');
+        var destinationPasswordField = document.getElementById('destinationPasswordField');
+        var useDestinationPemKey = document.getElementById('useDestinationPemKey');
+        var destinationPemKeyField = document.getElementById('destinationPemKeyField');
+
+        if (useDestinationPassword.checked) {
+            destinationPasswordField.style.display = 'block';
+            destinationPemKeyField.style.display = 'none';
+            useDestinationPemKey.value = '';
+        } else if (useDestinationPemKey.checked) {
+            destinationPemKeyField.style.display = 'block';
+            destinationPasswordField.style.display = 'none';
+        } else {
+            destinationPasswordField.style.display = 'none';
+            destinationPemKeyField.style.display = 'none';
+        }
+    }
+
+    // 삭제 버튼 클릭 시 삭제 확인 모달 열기
+    // 삭제 확인 모달 관련 변수
+
+
+    function confirmDelete(id, title) {
+        const confirmAction = confirm(`Are you sure you want to delete ${title}?`);
+        if (confirmAction) {
+            deleteHost(id);
+        }
+    }
+
+
+    // 서버에 삭제 요청
+    function deleteHost(id) {
+        console.log("id = " + id);
+        fetch(`/deleteHost/${id}`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert("삭제 실패!");
+                }
+            });
+    }
+
+    // 폼 제출 처리
+    document.getElementById('sshForm').onsubmit = function(event) {
+        event.preventDefault(); // 폼 제출 기본 동작 방지
+        var formData = new FormData(this);
+        var listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        listItem.textContent = `단순 SSH 접속 - 사용자명: ${formData.get('username')}, 호스트: ${formData.get('host')}, 포트: ${formData.get('port')}`;
+        document.getElementById('itemList').appendChild(listItem);
+        sshModal.style.display = "none";
+        this.reset(); // 폼 리셋
+        updateAuthFields();
+    }
+
+    document.getElementById('tunnelForm').onsubmit = function(event) {
+        event.preventDefault(); // 폼 제출 기본 동작 방지
+        var formData = new FormData(this);
+
+        // 터널링 정보를 수집하여 텍스트로 변환
+        var listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        listItem.textContent = `SSH 터널링 - 사용자명: ${formData.get('tunnelUsername')}, 터널링 호스트: ${formData.get('tunnelHost')}, 로컬 포트: ${formData.get('localPort')}, 원격 호스트: ${formData.get('remoteHost')}, 원격 포트: ${formData.get('remotePort')}, 목적지 사용자명: ${formData.get('destinationUsername')}`;
+
+        // 목록에 추가
+        document.getElementById('itemList').appendChild(listItem);
+
+        // 모달 창 닫기 및 폼 리셋
+        tunnelModal.style.display = "none";
+        this.reset();
+        updateTunnelAuthFields();
+        updateDestinationAuthFields();
+    }
+
+</script>
+</body>
+</html>
