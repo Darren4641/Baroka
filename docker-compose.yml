@@ -33,7 +33,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - baroka_db_data:/var/lib/baroka_mysql
+      - baroka_db_data:/var/lib/mysql
     networks:
       - baroka_network
 
