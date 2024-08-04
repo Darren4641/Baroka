@@ -25,7 +25,7 @@ _                   _          ___  ___  _ _
 # <span style="background-color:#fff5b1; color:#000;"> How to use baroka </span>
 ### **Docker Build**
 ```shell
-git clone https://github.com/Darren4641/baroka.git
+git clone https://github.com/Darren4641/Baroka.git
 cd baroka
 
 docker-compose up -d
