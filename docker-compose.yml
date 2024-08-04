@@ -12,9 +12,9 @@ services:
     volumes:
       - ./pem-keys:/pem-keys
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/baroka
-      SPRING_DATASOURCE_USERNAME: demo
-      SPRING_DATASOURCE_PASSWORD: 10041004
+      DB_URL: jdbc:mysql://db:3306/baroka
+      DB_USERNAME: demo
+      DB_PASSWORD: 10041004
       BAROKA_PATH: ~/baroka
     depends_on:
       - db

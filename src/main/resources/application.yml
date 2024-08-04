@@ -5,8 +5,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3307/baroka}
-    username: demo
-    password: 10041004
+    username: ${DB_USERNAME:demo}
+    password: ${DB_PASSWORD:10041004}
   jpa:
     properties:
       hibernate:
