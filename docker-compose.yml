@@ -12,7 +12,7 @@ services:
     volumes:
       - ./pem-keys:/pem-keys
     environment:
-      DB_URL: jdbc:mysql://db:3306/baroka
+      DB_URL: jdbc:mysql://localhost:3307/baroka
       DB_USERNAME: demo
       DB_PASSWORD: 10041004
       BAROKA_PATH: ~/baroka
