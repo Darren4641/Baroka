@@ -2,25 +2,18 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: baroka:1.5
-    container_name: baroka
-    ports:
-      - "8081:8080"
-    volumes:
-      - ./pem-keys:/pem-keys
+    image: zxz4641/baroka:1.2
+    container_name: baroka_app
     environment:
-      DB_URL: jdbc:mysql://localhost:3307/baroka
-      DB_USERNAME: demo
-      DB_PASSWORD: 10041004
-      BAROKA_PATH: ~/baroka
+      - DB_URL=jdbc:mysql://db:3306/baroka
+      - DB_USERNAME=demo
+      - DB_PASSWORD=10041004
     depends_on:
       - db
-    restart: always
     networks:
       - baroka_network
+    ports:
+      - "8080:8080"  # 필요에 따라 애플리케이션의 포트를 수정할 수 있습니다.
 
   db:
     image: mysql:8.0
