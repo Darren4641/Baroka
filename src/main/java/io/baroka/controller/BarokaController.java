@@ -58,7 +58,7 @@ public class BarokaController {
     @Value("${baroka.path}")
     private String path;
     @GetMapping(value =  "/")
-    public String index(Model model) {
+    public String index(Model model) throws IOException {
         List<Host> hostList = barokaService.getHostList();
         model.addAttribute("hostList", hostList);
         return "index";
@@ -66,7 +66,7 @@ public class BarokaController {
 
     @DeleteMapping("/deleteHost/{id}")
     @ResponseBody
-    public ResponseEntity<Void> deleteHost(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteHost(@PathVariable String id) {
         boolean isDeleted = barokaService.deleteHost(id);
 
         if (isDeleted) {
@@ -78,26 +78,26 @@ public class BarokaController {
 
 
     @PostMapping("/connect")
-    public String connectSSH(@RequestParam("id") String id,
+    public String connectSSH(@RequestParam("title") String title,
                              @RequestParam("username") String username,
                              @RequestParam("host") String host,
                              @RequestParam("port") int port,
                              @RequestParam(value = "password", required = false) String password,
                              @RequestParam(value = "pemKey", required = false) MultipartFile pemKey,
-                             Model model) {
+                             Model model) throws IOException {
         List<Host> hostList = barokaService.getHostList();
         model.addAttribute("hostList", hostList);
         try {
             Session session;
             if(pemKey != null && !pemKey.isEmpty()) {
-                session = barokaService.connectSessionWithPem(id, username, host, port, uploadPem(pemKey));
+                session = barokaService.connectSessionWithPem(title, username, host, port, uploadPem(pemKey));
             } else if (!StringUtils.isEmpty(password)) {
-                session = barokaService.connectSessionWithPassword(id, username, host, port, password);
+                session = barokaService.connectSessionWithPassword(title, username, host, port, password);
             } else {
                 throw new InvalidException("Either password or PEM key must be provided.");
             }
             barokaService.saveSSH(
-                    id,
+                    title,
                     username,
                     host,
                     port,
@@ -122,7 +122,7 @@ public class BarokaController {
     }
 
     @PostMapping("/connectWithPath")
-    public String connectSSH(@RequestParam("id") String id,
+    public String connectSSH(@RequestParam("title") String title,
                              @RequestParam("username") String username,
                              @RequestParam("host") String host,
                              @RequestParam("port") int port,
@@ -132,9 +132,9 @@ public class BarokaController {
         try {
             Session session;
             if(pemPath != null && !pemPath.isEmpty()) {
-                session = barokaService.connectSessionWithPem(id, username, host, port, pemPath);
+                session = barokaService.connectSessionWithPem(title, username, host, port, pemPath);
             } else if (!StringUtils.isEmpty(password)) {
-                session = barokaService.connectSessionWithPassword(id, username, host, port, password);
+                session = barokaService.connectSessionWithPassword(title, username, host, port, password);
             } else {
                 throw new InvalidException("Either password or PEM key must be provided.");
             }
@@ -156,7 +156,7 @@ public class BarokaController {
     }
 
     @PostMapping("/tunnel")
-    public String createTunnel(@RequestParam("id") String id,
+    public String createTunnel(@RequestParam("title") String title,
                                @RequestParam("tunnelHost") String tunnelHost,
                                @RequestParam("tunnelPort") int tunnelPort,
                                @RequestParam("tunnelUsername") String tunnelUsername,
@@ -173,9 +173,9 @@ public class BarokaController {
             Session tunnelSession;
             // ssh -i pem -L localport:remoteHost:remotePort tunnelUsername@tunnelHost -p 29290
             if(tunnelPemKey != null && !tunnelPemKey.isEmpty()) {
-                tunnelSession = barokaService.connectSessionWithPem(id, tunnelUsername, tunnelHost, tunnelPort, uploadPem(tunnelPemKey));
+                tunnelSession = barokaService.connectSessionWithPem(title, tunnelUsername, tunnelHost, tunnelPort, uploadPem(tunnelPemKey));
             } else if (!StringUtils.isEmpty(tunnelPassword)) {
-                tunnelSession = barokaService.connectSessionWithPassword(id, tunnelUsername, tunnelHost, tunnelPort, tunnelPassword);
+                tunnelSession = barokaService.connectSessionWithPassword(title, tunnelUsername, tunnelHost, tunnelPort, tunnelPassword);
             } else {
                 throw new InvalidException("[Tunnel] Either password or PEM key must be provided.");
             }
@@ -193,7 +193,7 @@ public class BarokaController {
             TerminalWebSocketHandler.addSession("Tunnel_" + sessionId, tunnelSession);
             TerminalWebSocketHandler.addSession(sessionId, destinationSession);
             barokaService.saveTunneling(
-                    id,
+                    title,
                     tunnelHost,
                     tunnelUsername,
                     tunnelPassword,
@@ -221,7 +221,7 @@ public class BarokaController {
     }
 
     @PostMapping("/tunnelWithPath")
-    public String createTunnel(@RequestParam("id") String id,
+    public String createTunnel(@RequestParam("title") String title,
                                @RequestParam("tunnelHost") String tunnelHost,
                                @RequestParam("tunnelPort") int tunnelPort,
                                @RequestParam("tunnelUsername") String tunnelUsername,
@@ -237,9 +237,9 @@ public class BarokaController {
         try {
             Session tunnelSession;
             if(tunnelPemKeyPath != null && !tunnelPemKeyPath.isEmpty()) {
-                tunnelSession = barokaService.connectSessionWithPem(id, tunnelUsername, tunnelHost, tunnelPort, tunnelPemKeyPath);
+                tunnelSession = barokaService.connectSessionWithPem(title, tunnelUsername, tunnelHost, tunnelPort, tunnelPemKeyPath);
             } else if (!StringUtils.isEmpty(tunnelPassword)) {
-                tunnelSession = barokaService.connectSessionWithPassword(id, tunnelUsername, tunnelHost, tunnelPort, tunnelPassword);
+                tunnelSession = barokaService.connectSessionWithPassword(title, tunnelUsername, tunnelHost, tunnelPort, tunnelPassword);
             } else {
                 throw new InvalidException("[Tunnel] Either password or PEM key must be provided.");
             }

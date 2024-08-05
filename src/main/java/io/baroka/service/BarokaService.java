@@ -1,21 +1,20 @@
 package io.baroka.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.baroka.component.SSHConnection;
 import io.baroka.entity.Host;
-import io.baroka.exception.InvalidException;
 import io.baroka.handler.TerminalWebSocketHandler;
-import io.baroka.repository.HostRepository;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static io.baroka.constants.Constants.BAROKA_PATH;
@@ -42,11 +41,30 @@ import static io.baroka.constants.Constants.BAROKA_PATH;
  * 7/19/24        darren       최초 생성
  */
 @Service
-@RequiredArgsConstructor
 public class BarokaService {
 
     private final SSHConnection sshConnection;
-    private final HostRepository hostRepository;
+    //private final HostRepository hostRepository;
+    private final File file;
+    private final ObjectMapper objectMapper;
+
+    public BarokaService(SSHConnection sshConnection) {
+        this.sshConnection = sshConnection;
+        this.file = new File("data/hosts.json");
+        objectMapper = new ObjectMapper();
+    }
+    @PostConstruct
+    public void init() throws IOException {
+        if (!file.exists()) {
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            file.createNewFile();
+            objectMapper.writeValue(file, new ArrayList<Host>());
+        }
+    }
+
     public Session connectSessionWithPem(String id, String username, String host, int port, String pemPath) throws JSchException, IOException, InterruptedException {
         return sshConnection.createSessionWithPem(username, host, port, pemPath);
 
@@ -56,17 +74,18 @@ public class BarokaService {
         return sshConnection.createSessionWithPassword(username, host, port, password);
     }
 
-    public void saveSSH(String id, String username, String host, int port, String password, String pemPath) {
-        hostRepository.save(
-                hostRepository.findByUsernameAndServerHost(username, host)
-                        .orElse(Host.builder()
-                                .id(id)
-                                .username(username)
-                                .serverHost(host)
-                                .serverPort(port)
-                                .password(password)
-                                .pem(pemPath)
-                                .build()));
+    public void saveSSH(String title, String username, String host, int port, String password, String pemPath) throws IOException {
+        List<Host> hosts = getHostList();
+        hosts.add(Host.builder()
+                .idx(UUID.randomUUID().toString())
+                .title(title)
+                .username(username)
+                .serverHost(host)
+                .serverPort(port)
+                .password(password)
+                .pem(pemPath)
+                .build());
+        objectMapper.writeValue(file, hosts);
     }
 
     public Session connectDestinationWithPassword(String destinationUsername, int localPort, String destinationPassword) throws JSchException{
@@ -77,9 +96,11 @@ public class BarokaService {
         return sshConnection.createTunnelSessionWithPem(destinationUsername, localPort, destinationPemPath);
     }
 
-    public void saveTunneling(String id, String tunnelHost, String tunnelUsername, String tunnelPassword, String tunnelPemPath, int tunnelPort, String remoteHost, int remotePort, String destinationUsername, String destinationPassword, String destinationPemPath, int localPort) {
-        hostRepository.save(Host.builder()
-                .id(id)
+    public void saveTunneling(String title, String tunnelHost, String tunnelUsername, String tunnelPassword, String tunnelPemPath, int tunnelPort, String remoteHost, int remotePort, String destinationUsername, String destinationPassword, String destinationPemPath, int localPort) throws IOException {
+        List<Host> hosts = getHostList();
+        hosts.add(Host.builder()
+                .idx(UUID.randomUUID().toString())
+                .title(title)
                 .username(destinationUsername)
                 .serverHost(remoteHost)
                 .serverPort(remotePort)
@@ -92,15 +113,21 @@ public class BarokaService {
                 .tunnelPem(tunnelPemPath)
                 .localPort(localPort)
                 .build());
+        objectMapper.writeValue(file, hosts);
     }
 
-    public List<Host> getHostList() {
-        return hostRepository.findAll();
+    public List<Host> getHostList() throws IOException {
+        if (!file.exists()) {
+            return new ArrayList<>();
+        }
+        return objectMapper.readValue(file, new TypeReference<List<Host>>() {});
     }
 
-    public Boolean deleteHost(Long id) {
+    public Boolean deleteHost(String id) {
         try {
-            hostRepository.deleteById(id);
+            List<Host> hosts = getHostList();
+            hosts.removeIf(host -> host.getIdx().equals(id));
+            objectMapper.writeValue(file, hosts);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

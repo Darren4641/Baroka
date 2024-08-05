@@ -37,3 +37,5 @@ out/
 .vscode/
 
 pem-keys/
+
+data/hosts.json

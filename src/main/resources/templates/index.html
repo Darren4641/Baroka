@@ -261,8 +261,8 @@
         <div class="modal-body">
             <form id="sshForm" method="post" th:action="@{/connect}" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="id">ID</label>
-                    <input type="text" id="id" name="id" required/>
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required/>
                 </div>
                 <div class="form-group">
                     <label for="username">사용자명</label>
@@ -318,8 +318,8 @@
         <div class="modal-body">
             <form id="tunnelForm" th:action="@{/tunnel}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="tunnelId">ID</label>
-                    <input type="text" id="tunnelId" name="id" required/>
+                    <label for="tunnelTitle">Title</label>
+                    <input type="text" id="tunnelTitle" name="title" required/>
                 </div>
                 <!-- 터널링 설정을 위한 정보 -->
                 <div class="form-group">
@@ -408,7 +408,7 @@
 </div>
 
 <div class="floating-container data" style="background: #3333331c" th:each="host : ${hostList}"
-     th:data-id="${host.id}"
+     th:data-title="${host.title}"
      th:data-host="${host.serverHost}"
      th:data-port="${host.serverPort}"
      th:data-username="${host.username}"
@@ -422,7 +422,7 @@
      th:data-tunnel-pem="${host.tunnelPem}"
      onclick="openSshModal(this)">
     <div class="card">
-        <h3 th:text="${host.id}"></h3>
+        <h3 th:text="${host.title}"></h3>
         <hr>
         <p><strong>Host:</strong> <span th:text="${host.serverHost}"></span></p>
         <p><strong>Port:</strong> <span th:text="${host.serverPort}"></span> <span th:if="${host.tunnelPort != null && host.tunnelPort != ''}" th:text="'(Local: ' + ${host.tunnelPort} + ')'"></span></p>
@@ -431,7 +431,7 @@
         <p th:if="${host.pem != null && host.pem != ''}"><strong style="color: #f00">Using Pem</strong></p>
     </div>
     <button th:id="${host.idx}"
-            th:title="${host.id}"
+            th:title="${host.title}"
             class="delete-btn" onclick="event.stopPropagation(); confirmDelete(id, title)">Delete</button>
 </div>
 
@@ -493,7 +493,7 @@
     document.getElementById('useDestinationPemKey').addEventListener('click', updateDestinationAuthFields);
     function openSshModal(element) {
 
-        var id = element.getAttribute("data-id");
+        var title = element.getAttribute("data-title");
         var host = element.getAttribute("data-host");
         var port = element.getAttribute("data-port");
         var username = element.getAttribute("data-username");
@@ -510,7 +510,7 @@
 
         if(tunnel_host && tunnel_host.trim() !== "") {
             var form = document.getElementById("tunnelForm");
-            document.getElementById("tunnelId").value = id;
+            document.getElementById("tunnelTitle").value = title;
             document.getElementById("tunnelHost").value = tunnel_host;
             document.getElementById("tunnelPort").value = tunnel_port;
             document.getElementById("tunnelUsername").value = tunnel_username;
@@ -527,7 +527,6 @@
                 document.getElementById("tunnelPassword").value = tunnel_password;
                 document.getElementById("tunnelPemKeyPath").value = null;
             }else if(tunnel_pem) {
-                console.log("@@@");
                 document.getElementById("useTunnelPemPathKey").checked = true;
                 document.getElementById("useTunnelPemPathKey").style.display = "block";
                 document.getElementById("tunnelPemKeyPathField").style.display = "block";
@@ -557,7 +556,7 @@
             tunnelModal.style.display = "block";
         } else {
             var form = document.getElementById("sshForm");
-            document.getElementById("id").value = id;
+            document.getElementById("title").value = title;
             document.getElementById("host").value = host;
             document.getElementById("port").value = port;
             document.getElementById("username").value = username;

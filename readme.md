@@ -6,7 +6,7 @@ _                   _          ___  ___  _ _
 ```
 ---
 ## Web기반 SSH / Tunnel SSH 바로가! ↗️
-# ![LOGO](./baroka.gif)
+# ![LOGO](img/baroka.gif)
 
 매번 SSH 접속 및 터널링 복사/붙여녛기로 진행하셨던 분들 주목! (바로 나)
 
@@ -32,9 +32,9 @@ docker-compose up -d
 ```
 ### **1. http://localhost:8080 접속**
 ### **2. [+] 버튼을 눌러 서버를 추가하세요.**
-# ![LOGO](./index.png)
+# ![LOGO](img/index.png)
 ### **3. SSH 접속 유형을 선택해주세요.**
-# ![LOGO](./step1.png)
+# ![LOGO](img/step1.png)
 ### **단순 SSH의 경우**
 ```
 [example]
@@ -65,21 +65,21 @@ ID - Title 입력(원하는 이름)
 ```
 ### **4. 연결 클릭**
 ### **5. 접속 후 기존 Terminal과 동일하게 입력**
-# ![LOGO](./terminal.png)
+# ![LOGO](img/terminal.png)
 
 ### **6. VI 편집기 실행 (명령어로)**
 ```shell
 vi test
 ```
-# ![LOGO](./vi.png)
+# ![LOGO](img/vi.png)
 저장 후 나가기 클릭시 명령어를 입력한 경로에 파일 저장
 
 ### **7. 바로카 스크립트 생성**
 ### 1.버튼 클릭 
-![LOGO](./add_script.png)
+![LOGO](img/add_script.png)
 ### 2. 스크립트 제목 / 스크립트 내용 작성 후 저장
-![LOGO](./baroka_vi.png)
-![LOGO](./baroka_icon.png)
+![LOGO](img/baroka_vi.png)
+![LOGO](img/baroka_icon.png)
 ### 3-1. 아이콘 클릭시 스크립트 실행
 ### 3-2. 이름 클릭 시 편집
 ### 3-3. X아이콘 클릭시 삭제

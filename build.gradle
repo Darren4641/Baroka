@@ -32,10 +32,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // JPA
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    //implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     // Mysql
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    //runtimeOnly 'com.mysql:mysql-connector-j'
 
     // GSON
     implementation 'com.google.code.gson:gson'
@@ -43,15 +43,15 @@ dependencies {
     // JSch
     implementation 'com.github.mwiede:jsch:0.2.3'
 
-
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
     // Annotation processor
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     // h2 DB
-    runtimeOnly 'com.h2database:h2'
-    testImplementation 'com.h2database:h2'
+//    runtimeOnly 'com.h2database:h2'
+//    testImplementation 'com.h2database:h2'
 
     // thymeleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'

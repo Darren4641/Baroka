@@ -2,18 +2,18 @@
 #  banner-mode: "off"
 
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL:jdbc:mysql://localhost:3307/baroka}
-    username: ${DB_USERNAME:demo}
-    password: ${DB_PASSWORD:10041004}
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        ddl-auto: update
-    show-sql: true
-    generate-ddl: true
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: ${DB_URL:jdbc:mysql://localhost:3307/baroka}
+#    username: ${DB_USERNAME:demo}
+#    password: ${DB_PASSWORD:10041004}
+#  jpa:
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQL8Dialect
+#        ddl-auto: update
+#    show-sql: true
+#    generate-ddl: true
 
 messaging:
   socket: true
