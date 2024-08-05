@@ -2,8 +2,11 @@ version: '3.8'
 
 services:
   app:
-    image: zxz4641/baroka:1.2
-    container_name: baroka_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: baroka:1.5
+    container_name: baroka
     environment:
       - DB_URL=jdbc:mysql://db:3306/baroka
       - DB_USERNAME=demo
