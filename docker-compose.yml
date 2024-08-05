@@ -2,17 +2,12 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: baroka:1.5
+    image: zxz4641/baroka:1.6
     container_name: baroka
     environment:
-      - DB_URL=jdbc:mysql://db:3306/baroka
-      - DB_USERNAME=demo
-      - DB_PASSWORD=10041004
-    depends_on:
-      - db
+      - BAROKA_PATH=~/.baroka
+    volumes:
+      - ./data:/data
     networks:
       - baroka_network
     ports:
