@@ -113,6 +113,7 @@ public class BarokaController {
             model.addAttribute("barokaFiles", barokaList);
             model.addAttribute("colors", generateRandomColors(barokaList.size()));
             model.addAttribute("barokaPath", path);
+            model.addAttribute("title", title);
             return "terminal";
         } catch (Exception e) {
             e.printStackTrace();
@@ -147,6 +148,7 @@ public class BarokaController {
             model.addAttribute("barokaFiles", barokaList);
             model.addAttribute("colors", generateRandomColors(barokaList.size()));
             model.addAttribute("barokaPath", path);
+            model.addAttribute("title", title);
             return "terminal";
         } catch (Exception e) {
             e.printStackTrace();
@@ -212,6 +214,7 @@ public class BarokaController {
             model.addAttribute("barokaFiles", barokaList);
             model.addAttribute("colors", generateRandomColors(barokaList.size()));
             model.addAttribute("barokaPath", path);
+            model.addAttribute("title", title);
             return "terminal";
         } catch (Exception e) {
             e.printStackTrace();
@@ -263,6 +266,7 @@ public class BarokaController {
             model.addAttribute("barokaFiles", barokaList);
             model.addAttribute("colors", generateRandomColors(barokaList.size()));
             model.addAttribute("barokaPath", path);
+            model.addAttribute("title", title);
             return "terminal";
         } catch (Exception e) {
             e.printStackTrace();
