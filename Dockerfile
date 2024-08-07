@@ -30,4 +30,4 @@ ENTRYPOINT ["java", "-jar","/baroka.jar"]
 ## 6. 실행 명령 설정
 #ENTRYPOINT ["java", "-jar", "/baroka.jar"]
 
-## docker build --platform linux/amd64 -t zxz4641/baroka:1.6.1 .
+## docker build --platform linux/amd64 -t zxz4641/baroka:1.7.2 .

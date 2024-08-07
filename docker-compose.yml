@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   app:
-    image: zxz4641/baroka:1.6.1
+    image: zxz4641/baroka:1.7.2
     container_name: baroka
     environment:
       - BAROKA_PATH=~/.baroka
     volumes:
       - ./data:/data
+      - ./pem-keys:/pem-keys
     networks:
       - baroka_network
     ports:

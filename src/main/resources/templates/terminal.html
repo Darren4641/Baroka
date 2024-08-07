@@ -262,12 +262,15 @@
         const username = [[${username}]]; // 타임리프를 통해 서버에서 사용자 이름을 전달받음
         const sessionId = [[${sessionId}]]; // 타임리프를 통해 서버에서 세션 ID를 전달받음
         let autoScroll = true; // 스크롤 자동 이동 여부를 관리하는 플래그
+        let reconnectAttempts = 0; // 재연결 시도 횟수
+        const maxReconnectAttempts = 10; // 최대 재연결 시도 횟수
 
         function connectWebSocket() {
             socket = new WebSocket("ws://" + window.location.host + "/terminal");
 
             socket.onopen = function() {
                 console.log("WebSocket connection established");
+                reconnectAttempts = 0;
                 const enterMessage = {
                     session: sessionId,
                     messageType: "ENTER"
@@ -299,6 +302,15 @@
 
             socket.onclose = function() {
                 console.log("WebSocket connection closed");
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    setTimeout(() => {
+                        reconnectAttempts++;
+                        console.log(`Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`);
+                        connectWebSocket();
+                    }, 1000 * reconnectAttempts); // 점진적으로 재연결 시도 간격을 증가
+                } else {
+                    appendOutput("Failed to reconnect after multiple attempts. Please refresh the page.\n", 'error-line');
+                }
             };
 
             socket.onerror = function(error) {
@@ -309,22 +321,22 @@
         function sendCommand() {
             const commandInput = document.getElementById('command');
             const command = commandInput.value;
-            if (command.trim() !== "") {
-                isInterrupted = false;
-                if (command.trim() === "clear") {
-                    clearOutput();
-                } else {
-                    const commandMessage = {
-                        session: sessionId,
-                        messageType: "COMMAND",
-                        data: command
-                    };
-                    socket.send(JSON.stringify(commandMessage));
-                    commandInput.value = "";
-                    commandInput.focus();
-                    autoScroll = true;
-                }
+
+            isInterrupted = false;
+            if (command.trim() === "clear") {
+                clearOutput();
+            } else {
+                const commandMessage = {
+                    session: sessionId,
+                    messageType: "COMMAND",
+                    data: command
+                };
+                socket.send(JSON.stringify(commandMessage));
+                commandInput.value = "";
+                commandInput.focus();
+                autoScroll = true;
             }
+
         }
 
         function appendOutput(text, type = 'output-line') {
@@ -555,6 +567,7 @@
 
         function closeEditor() {
             document.getElementById('editModal').style.display = 'none';
+            document.getElementById('modalTitle').value = '';
         }
 
         function fetchFileContent(title, currentPath) {

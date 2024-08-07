@@ -75,7 +75,10 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         if (sessionMap.isEmpty()) {
-            session.sendMessage(new TextMessage("No session ID provided"));
+            session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+                    .messageType(MessageType.EXIT)
+                    .data("[bad] No session ID provided")
+                    .build())));
             session.close();
         }
 
@@ -84,6 +87,7 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        missedACKClear(session.getId());
         String payload = message.getPayload();
         log.info("payload : {}", payload);
 
@@ -386,23 +390,6 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void sendCtrlC(WebSocketSession session) {
-        new Thread(() -> {
-            try {
-                Session sshSession = (Session) session.getAttributes().get("sshSession");
-                if (sshSession != null) {
-                    ChannelShell channel = shellChannelMap.get(session.getAttributes().get("sessionId"));
-                    if (channel != null && channel.isConnected()) {
-                        OutputStream outputStream = channel.getOutputStream();
-                        outputStream.write(("\u0003").getBytes(StandardCharsets.UTF_8)); // \u0003는 Ctrl+C의 ASCII 코드입니다.
-                        outputStream.flush();
-                    }
-                }
-            } catch (IOException e) {
-                log.error("Error sending Ctrl+C signal: {}", e.getMessage(), e);
-            }
-        }).start();
-    }
 
     public static void addSession(String sessionId, Session session) {
         sessionMap.put(sessionId, session);
@@ -499,7 +486,6 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         if (session == null) {
             throw new RuntimeException("SSH session not found");
         }
-        System.out.println("isBaroka" + isBaroka);
         if(isBaroka && !title.contains(".sh")) {
             StringBuilder sb = new StringBuilder();
             sb.append(title);
