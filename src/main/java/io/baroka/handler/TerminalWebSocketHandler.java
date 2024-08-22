@@ -67,6 +67,8 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
     private static final Map<String, ChannelShell> shellChannelMap = new ConcurrentHashMap<>();
     private static final Map<String, Process> processMap = new ConcurrentHashMap<>();
 
+    private static final Map<String, Integer> localPortMap = new ConcurrentHashMap<>();
+
     // ANSI escape code pattern, including specific sequences like \u001B[?2004l
     private static final Pattern ANSI_PATTERN = Pattern.compile("\\x1B\\[[0-9;?]*[a-zA-Z]");
 
@@ -104,6 +106,9 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
             } else {
                 hasSession = false;
             }
+            if(messageDto.getLocalPort() != null) {
+                localPortMap.put(sessionId, messageDto.getLocalPort());
+            }
 
         } else if (messageDto.getMessageType().equals(MessageType.COMMAND)) {
             Session sshSession = (Session) session.getAttributes().get("sshSession");
@@ -117,7 +122,22 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
                                 .messageType(MessageType.EXIT)
                                 .data("")
                                 .build())));
-                        disconnectSession(tunnelSessionId, session);
+                        Session tunnelSession = sessionMap.get(tunnelSessionId);
+                        if(tunnelSession != null) {
+                            try {
+                                System.out.println(localPortMap.get(sessionId));
+                                log.info("tunnelSession => {}", tunnelSession.getHost());
+                                log.info("localPort => {}", localPortMap.get(sessionId));
+                                log.info("test => {}", tunnelSession.isConnected());
+                                tunnelSession.delPortForwardingL(localPortMap.get(sessionId));
+
+                                Thread.sleep(100);
+                                tunnelSession.disconnect();
+                            }catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
                         disconnectSession(sessionId, session);
 
                     } else if(((String) messageDto.getData()).startsWith("vi")) {
@@ -170,11 +190,7 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
                 hasSession = false;
             }
         } else if(messageDto.getMessageType().equals(MessageType.EXIT)) {
-            String tunnelSessionId = "Tunnel_" + messageDto.getSession();
-            String sessionId = messageDto.getSession();
 
-            disconnectSession(tunnelSessionId, session);
-            disconnectSession(sessionId, session);
         } else if(messageDto.getMessageType().equals(MessageType.VI_OPERATION)) {
             handleFileOperation(session, messageDto);
         }  else if (messageDto.getMessageType().equals(MessageType.VI_CONTENT)) {
@@ -204,10 +220,21 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         String sessionId = (String) session.getAttributes().get("sessionId");
+
+        String tunnelSessionId = "Tunnel_" + sessionId;
         if (sessionId != null) {
             Session sshSession = sessionMap.get(sessionId);
             if (sshSession != null) {
                 sshSession.disconnect();
+            }
+            Session tunnelSession = sessionMap.get(tunnelSessionId);
+            if(tunnelSession != null) {
+                System.out.println(localPortMap.get(sessionId));
+                log.info("tunnelSession => {}", tunnelSession.getHost());
+                log.info("localPort => {}", localPortMap.get(sessionId));
+                tunnelSession.delPortForwardingL(localPortMap.get(sessionId));
+                Thread.sleep(100);
+                tunnelSession.disconnect();
             }
             removeSession(sessionId);
         }
@@ -352,21 +379,6 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         channelExec.disconnect();
     }
 
-    private void getBarokaDirectory(WebSocketSession webSocketSession, Session sshSession) throws JSchException, IOException {
-        // Create directory if not exists
-        String checkAndCreateCommand = "mkdir -p " + BAROKA_PATH;
-        executeCommand(sshSession, checkAndCreateCommand);
-
-        // List .sh files in the directory
-        String listFilesCommand = "ls " + BAROKA_PATH + "*.sh";
-        String files = executeCommand(sshSession, listFilesCommand);
-
-        // Send the file list back to the client
-        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(
-                Message.builder().messageType(MessageType.COMMAND)
-                        .data(files)
-                        .build())));
-    }
 
     private void sendSignalToShell(WebSocketSession webSocketSession, Session sshSession, Message messageDto) throws IOException, JSchException {
         String signal = (String) messageDto.getData();

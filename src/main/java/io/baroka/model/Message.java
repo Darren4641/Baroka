@@ -35,12 +35,14 @@ public class Message<T> implements Serializable {
     private String session;
     private MessageType messageType;
     private String remoteDir;
+    private Integer localPort;
     private T data;
 
-    public Message(String session, MessageType messageType, String remoteDir, T data) {
+    public Message(String session, MessageType messageType, String remoteDir, Integer localPort, T data) {
         this.session = session;
         this.messageType = messageType;
         this.remoteDir = remoteDir;
+        this.localPort = localPort;
         this.data = data;
     }
 
@@ -49,4 +51,5 @@ public class Message<T> implements Serializable {
         this.messageType = messageType;
         this.data = data;
     }
+
 }

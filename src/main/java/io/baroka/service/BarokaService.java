@@ -92,7 +92,7 @@ public class BarokaService {
         return sshConnection.createTunnelSessionWithPassword(destinationUsername, localPort, destinationPassword);
     }
 
-    public Session connectDestinationWithPem(String destinationUsername, int localPort, String destinationPemPath) throws JSchException, IOException {
+    public Session connectDestinationWithPem(String destinationUsername, int localPort, String destinationPemPath) throws JSchException, IOException, IllegalAccessException {
         return sshConnection.createTunnelSessionWithPem(destinationUsername, localPort, destinationPemPath);
     }
 

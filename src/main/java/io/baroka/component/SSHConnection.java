@@ -3,6 +3,7 @@ package io.baroka.component;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import io.baroka.exception.InvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -72,24 +73,44 @@ public class SSHConnection {
     }
 
     public Session createTunnelSessionWithPassword(String destinationUsername, int localPort, String destinationPassword) throws JSchException {
-        Session session = jsch.getSession(destinationUsername, LOCAL_HOST, localPort);
-        session.setPassword(destinationPassword);
-        Properties config = new Properties();
-        config.put(STRICT_HOST_KEY_CHECKING, NO);
-        session.setConfig(config);
-        session.connect();
+        Session session = null;
+        try {
+            session = jsch.getSession(destinationUsername, LOCAL_HOST, localPort);
+            session.setPassword(destinationPassword);
+            Properties config = new Properties();
+            config.put(STRICT_HOST_KEY_CHECKING, NO);
+            session.setConfig(config);
+            session.connect();
+
+        }catch (JSchException e) {
+            if(e.getMessage().equals("connection is closed by foreign host")) {
+                throw new InvalidException("Previous connection is shutting down. Please try again in a moment.\n Try Again!!");
+            }
+        } catch (Exception e) {
+            throw e;
+        }
         return session;
     }
 
-    public Session createTunnelSessionWithPem(String destinationUsername, int localPort, String destinationPemPath) throws JSchException, IOException {
-        byte[] pemBytes = Files.readAllBytes(Paths.get(destinationPemPath));
-        jsch.addIdentity(KEY_NAME, pemBytes, null, null);
+    public Session createTunnelSessionWithPem(String destinationUsername, int localPort, String destinationPemPath) throws JSchException, IOException, IllegalAccessException {
+        Session session = null;
+        try {
+            byte[] pemBytes = Files.readAllBytes(Paths.get(destinationPemPath));
+            jsch.addIdentity(KEY_NAME, pemBytes, null, null);
 
-        Session session = jsch.getSession(destinationUsername, LOCAL_HOST, localPort);
-        Properties config = new Properties();
-        config.put(STRICT_HOST_KEY_CHECKING, NO);
-        session.setConfig(config);
-        session.connect();
+            session = jsch.getSession(destinationUsername, LOCAL_HOST, localPort);
+            Properties config = new Properties();
+            config.put(STRICT_HOST_KEY_CHECKING, NO);
+            session.setConfig(config);
+            session.connect();
+
+        }catch (JSchException e) {
+            if(e.getMessage().equals("connection is closed by foreign host")) {
+                throw new InvalidException("Previous connection is shutting down. Please try again in a moment.\n Try Again!!");
+            }
+        } catch (Exception e) {
+            throw e;
+        }
         return session;
     }
 //    public void createTunnel(String username, String host, int port, InputStream privateKeyInputStream, int localPort, int remotePort, String remoteHost) throws Exception {

@@ -261,6 +261,7 @@
         let barokaPath = [[${barokaPath}]];
         const username = [[${username}]]; // 타임리프를 통해 서버에서 사용자 이름을 전달받음
         const sessionId = [[${sessionId}]]; // 타임리프를 통해 서버에서 세션 ID를 전달받음
+        const localPort = [[${localPort}]]; // 타임리프를 통해 서버에서 localPort를 전달받음
         let autoScroll = true; // 스크롤 자동 이동 여부를 관리하는 플래그
         let reconnectAttempts = 0; // 재연결 시도 횟수
         const maxReconnectAttempts = 10; // 최대 재연결 시도 횟수
@@ -273,6 +274,7 @@
                 reconnectAttempts = 0;
                 const enterMessage = {
                     session: sessionId,
+                    localPort: localPort,
                     messageType: "ENTER"
                 };
                 socket.send(JSON.stringify(enterMessage));

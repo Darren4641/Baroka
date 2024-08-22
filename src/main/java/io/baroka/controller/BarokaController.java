@@ -181,7 +181,17 @@ public class BarokaController {
             } else {
                 throw new InvalidException("[Tunnel] Either password or PEM key must be provided.");
             }
-            tunnelSession.setPortForwardingL(localPort, remoteHost, remotePort);
+
+            try {
+                tunnelSession.setPortForwardingL(localPort, remoteHost, remotePort);
+            } catch (JSchException e) {
+                // 포트 충돌로 인한 BindException 처리
+                if (e.getCause() instanceof java.net.BindException) {
+                    tunnelSession.setPortForwardingL(0, remoteHost, remotePort);
+                } else {
+                    throw new InvalidException(e.getMessage()); // 다른 예외는 다시 던져서 처리
+                }
+            }
 
             Session destinationSession;
             if(destinationPemKey != null && !destinationPemKey.isEmpty()) {
@@ -215,6 +225,7 @@ public class BarokaController {
             model.addAttribute("colors", generateRandomColors(barokaList.size()));
             model.addAttribute("barokaPath", path);
             model.addAttribute("title", title);
+            model.addAttribute("localPort", localPort);
             return "terminal";
         } catch (Exception e) {
             e.printStackTrace();
@@ -246,7 +257,18 @@ public class BarokaController {
             } else {
                 throw new InvalidException("[Tunnel] Either password or PEM key must be provided.");
             }
-            tunnelSession.setPortForwardingL(localPort, remoteHost, remotePort);
+
+            try {
+                tunnelSession.setPortForwardingL(localPort, remoteHost, remotePort);
+            } catch (JSchException e) {
+                // 포트 충돌로 인한 BindException 처리
+                if (e.getCause() instanceof java.net.BindException) {
+                    tunnelSession.setPortForwardingL(0, remoteHost, remotePort);
+                } else {
+                    throw new InvalidException(e.getMessage()); // 다른 예외는 다시 던져서 처리
+                }
+            }
+
 
             Session destinationSession;
             if(destinationPemKeyPath != null && !destinationPemKeyPath.isEmpty()) {
@@ -267,6 +289,7 @@ public class BarokaController {
             model.addAttribute("colors", generateRandomColors(barokaList.size()));
             model.addAttribute("barokaPath", path);
             model.addAttribute("title", title);
+            model.addAttribute("localPort", localPort);
             return "terminal";
         } catch (Exception e) {
             e.printStackTrace();
