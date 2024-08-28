@@ -1,0 +1,84 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.0.20'
+}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}//plugins {
+//    id 'java'
+//    id 'org.springframework.boot' version '3.1.0'
+//    id 'io.spring.dependency-management' version '1.1.6'
+//}
+//
+//group = 'io.baroka'
+//version = '0.0.1-SNAPSHOT'
+//sourceCompatibility = '17'
+//
+//java {
+//    toolchain {
+//        languageVersion = JavaLanguageVersion.of(17)
+//    }
+//}
+//
+//
+//configurations {
+//    compileOnly {
+//        extendsFrom annotationProcessor
+//    }
+//}
+//
+//repositories {
+//    mavenCentral()
+//}
+//
+//dependencies {
+//    implementation 'org.springframework.boot:spring-boot-starter-web'
+//    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+//    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//
+//    // JPA
+//    //implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+//
+//    // Mysql
+//    //runtimeOnly 'com.mysql:mysql-connector-j'
+//
+//    // GSON
+//    implementation 'com.google.code.gson:gson'
+//
+//    // JSch
+//    implementation 'com.github.mwiede:jsch:0.2.3'
+//
+//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+//    // Annotation processor
+//    compileOnly 'org.projectlombok:lombok'
+//    annotationProcessor 'org.projectlombok:lombok'
+//    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+//
+//    // h2 DB
+////    runtimeOnly 'com.h2database:h2'
+////    testImplementation 'com.h2database:h2'
+//
+//    // thymeleaf
+//    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+//    implementation 'org.thymeleaf:thymeleaf:3.1.0.RELEASE'
+//    implementation 'org.thymeleaf:thymeleaf-spring5:3.1.0.RELEASE'
+//    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.1.0'
+//
+//}
+//
+//tasks.named('test') {
+//    useJUnitPlatform()
+//}
