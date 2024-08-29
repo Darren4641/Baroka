@@ -1,6 +1,5 @@
 package io.baroka.component
 
-import com.google.gson.Gson
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.JSchException
 import com.jcraft.jsch.Session
@@ -15,9 +14,8 @@ import java.nio.file.Paths
 import java.util.Properties
 
 @Component
-class ShellComponentKt (
+class SSHConnection (
     private val jsch: JSch,
-    private val gson: Gson = Gson()
 ) {
 
     fun createSessionWithPem(username: String, host: String, port: Int, pemPath: String) : Session {
@@ -70,5 +68,28 @@ class ShellComponentKt (
         return session
     }
 
-    // TODO createTunnelSessionWithPem
+    fun createTunnelSessionWithPem(destinationUsername: String, localPort: Int, destinationPemPath: String) : Session {
+        val session : Session
+
+        try {
+            val pemBytes = Files.readAllBytes(Paths.get(destinationPemPath))
+            jsch.addIdentity(KEY_NAME, pemBytes, null, null)
+
+            session = jsch.getSession(destinationUsername, LOCAL_HOST, localPort)
+            val config = Properties()
+            config.put(STRICT_HOST_KEY_CHECKING, NO)
+            session.setConfig(config)
+            session.connect()
+
+        } catch (e: JSchException) {
+            if (e.message == "connection is closed by foreign host") {
+                throw InvalidException("Previous connection is shutting down. Please try again in a moment.\n Try Again!!")
+            } else {
+                throw e
+            }
+        }
+
+
+        return session
+    }
 }
