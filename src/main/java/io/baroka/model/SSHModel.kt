@@ -11,6 +11,10 @@ data class Message<T> (
     val localPort: Int,
     val data: T
 ) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+
     //constructor(session: String, messageType: MessageType, data: T) : this(session, messageType, "", 0,data)
 }
 

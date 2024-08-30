@@ -45,7 +45,7 @@ class SSHConnection (
     }
 
     fun createTunnelSessionWithPassword(destinationUsername: String, localPort: Int, destinationPassword: String) : Session {
-        val session: Session
+        lateinit var session: Session
 
         try {
             session = jsch.getSession(destinationUsername, LOCAL_HOST, localPort)
@@ -88,7 +88,6 @@ class SSHConnection (
                 throw e
             }
         }
-
 
         return session
     }
