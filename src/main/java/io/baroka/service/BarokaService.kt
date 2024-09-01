@@ -2,14 +2,21 @@ package io.baroka.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.jcraft.jsch.Channel
+import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.Session
 import io.baroka.component.SSHConnection
 import io.baroka.entity.Host
+import io.baroka.handler.TerminalWebSocketHandler
 import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Service
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.util.*
 import java.util.function.Predicate
+import kotlin.collections.ArrayList
 
 @Service
 class BarokaService (
@@ -44,8 +51,8 @@ class BarokaService (
             port = port,
             password = password)
 
-    fun saveSSH(title: String, username: String, host: String, port: Int, password: String, pemPath: String) {
-        var hosts = getHostList().toMutableList()
+    fun saveSSH(title: String, username: String, host: String, port: Int, password: String?, pemPath: String?) {
+        val hosts = getHostList().toMutableList()
         hosts.add(
             Host(
                 idx = UUID.randomUUID().toString(),
@@ -75,16 +82,16 @@ class BarokaService (
     fun saveTunneling(title: String,
                       tunnelHost: String,
                       tunnelUsername: String,
-                      tunnelPassword: String,
-                      tunnelPemPath: String,
+                      tunnelPassword: String?,
+                      tunnelPemPath: String?,
                       tunnelPort: Int,
                       remoteHost: String,
                       remotePort: Int,
                       destinationUsername: String,
-                      destinationPassword: String,
-                      destinationPemPath: String,
+                      destinationPassword: String?,
+                      destinationPemPath: String?,
                       localPort: Int) {
-        var hosts = getHostList().toMutableList()
+        val hosts = getHostList().toMutableList()
 
         hosts.add(
             Host(
@@ -112,16 +119,46 @@ class BarokaService (
         }
     }
 
-    fun deleteHost(id: String): Boolean? {
+    fun deleteHost(id: String): Boolean {
         return try {
-            val hosts = getHostList()
-            hosts.removeIf(Predicate<Host> { (idx): Host -> idx == id })
+            val hosts = getHostList().toMutableList()
+            hosts.removeIf { host -> host.idx == id }
             objectMapper.writeValue(file, hosts)
             true
-        } catch (e: Exception) {
+        } catch(e: Exception) {
             e.printStackTrace()
             false
         }
+    }
+
+    fun getShell(sessionId: String, path: String) : List<String> {
+        val session = TerminalWebSocketHandler.getSession(sessionId)
+        executeCommand(session, "mkdir -p " + path)
+
+        val shellFiles = executeCommand(session, "sh -c 'find " + path + " -type f -name \"*.sh\" -perm /111'")
+
+        return shellFiles.map{ shell  ->
+                val splitShell = shell.split("/")
+                splitShell[splitShell.size - 1]
+            }
+    }
+
+    private fun  executeCommand(session: Session, command: String) : List<String> {
+        val channel : ChannelExec = session.openChannel("exec") as ChannelExec
+        channel.setCommand(command)
+
+        val inputStream : InputStream = channel.inputStream
+        channel.connect()
+
+        var reader = BufferedReader(InputStreamReader(inputStream))
+        val lines = ArrayList<String>().toMutableList()
+        var line: String?
+        while(reader.readLine().also { line = it } != null) {
+            lines.add(line!!)
+        }
+
+        channel.disconnect()
+        return lines
     }
 
 }

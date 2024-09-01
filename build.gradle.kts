@@ -50,6 +50,7 @@ dependencies {
     implementation("org.thymeleaf:thymeleaf:3.1.0.RELEASE")
     implementation("org.thymeleaf:thymeleaf-spring5:3.1.0.RELEASE")
     implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.1.0")
+    implementation(kotlin("stdlib-jdk8"))
 
 }
 
@@ -58,6 +59,7 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
+    jvmToolchain(17)
 }
 
 tasks.withType<Test> {
