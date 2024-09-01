@@ -17,27 +17,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
-/**
- * -------------------------------------------------------------------------------------
- * ::::::'OO::::'OOO::::'OO:::'OO:'OO::::'OO:'OOOOOOOO:::'OOOOOOO::'OO::::'OO:'OO....OO:
- * :::::: OO:::'OO OO:::. OO:'OO:: OO::::.OO: OO.....OO:'OO.....OO: OO:::: OO: OOO...OO:
- * :::::: OO::'OO:..OO:::. OOOO::: OO::::.OO: OO::::.OO: OO::::.OO: OO:::: OO: OOOO..OO:
- * :::::: OO:'OO:::..OO:::. OO:::: OO::::.OO: OOOOOOOO:: OO::::.OO: OO:::: OO: OO.OO.OO:
- * OO:::: OO: OOOOOOOOO:::: OO:::: OO::::.OO: OO.. OO::: OO::::.OO: OO:::: OO: OO..OOOO:
- * :OO::::OO: OO.....OO:::: OO:::: OO::::.OO: OO::. OO:: OO::::.OO: OO:::: OO: OO:..OOO:
- * ::OOOOOO:: OO:::..OO:::: OO::::. OOOOOOO:: OO:::. OO:. OOOOOOO::. OOOOOOO:: OO::..OO:
- * :......:::..:::::..:::::..::::::.......:::..:::::..:::.......::::.......:::..::::..::
- * <p>
- * packageName    : io.baroka.controller
- * fileName       : BarokaController
- * author         : darren
- * date           : 9/1/24
- * description    :
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 9/1/24        darren       최초 생성
- */
+
 @Controller
 class BarokaController (
     val barokaService: BarokaService,

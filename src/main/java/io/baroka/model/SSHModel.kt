@@ -5,11 +5,11 @@ import java.io.Serializable
 
 @Builder
 data class Message<T> (
-    val session: String,
+    val session: String? = null,
     val messageType: MessageType,
-    val remoteDir: String,
-    val localPort: Int,
-    val data: T
+    val remoteDir: String? = null,
+    val localPort: Int? = null,
+    val data: T? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L

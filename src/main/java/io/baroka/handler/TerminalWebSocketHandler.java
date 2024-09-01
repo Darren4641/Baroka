@@ -74,18 +74,18 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
     @Value("${baroka.path}")
     private String path;
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        if (sessionMap.isEmpty()) {
-            session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
-                    .messageType(MessageType.EXIT)
-                    .data("[bad] No session ID provided")
-                    .build())));
-            session.close();
-        }
-
-        doACK(session);
-    }
+//    @Override
+//    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+//        if (sessionMap.isEmpty()) {
+//            session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+//                    .messageType(MessageType.EXIT)
+//                    .data("[bad] No session ID provided")
+//                    .build())));
+//            session.close();
+//        }
+//
+//        doACK(session);
+//    }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -96,71 +96,71 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         Message messageDto = mapper.readValue(payload, Message.class);
 
         boolean hasSession = true;
-        if (messageDto.getMessageType().equals(MessageType.ENTER)) {
-            String sessionId = messageDto.getSession();
-            Session SSHSession = sessionMap.get(sessionId);
-            if (SSHSession != null) {
-                session.getAttributes().put("sshSession", SSHSession);
-                pathMap.put(sessionId, "~"); // 초기 경로 설정
-                startShellChannel(session, SSHSession, sessionId);
-            } else {
-                hasSession = false;
-            }
-            if(messageDto.getLocalPort() != null) {
-                localPortMap.put(sessionId, messageDto.getLocalPort());
-            }
-
-        } else if (messageDto.getMessageType().equals(MessageType.COMMAND)) {
-            Session sshSession = (Session) session.getAttributes().get("sshSession");
-            if (sshSession != null) {
-                try {
-
-                    if(((String) messageDto.getData()).equals("exit")) {
-                        String tunnelSessionId = "Tunnel_" + messageDto.getSession();
-                        String sessionId = messageDto.getSession();
-                        session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
-                                .messageType(MessageType.EXIT)
-                                .data("")
-                                .build())));
-                        Session tunnelSession = sessionMap.get(tunnelSessionId);
-                        if(tunnelSession != null) {
-                            try {
-                                System.out.println(localPortMap.get(sessionId));
-                                log.info("tunnelSession => {}", tunnelSession.getHost());
-                                log.info("localPort => {}", localPortMap.get(sessionId));
-                                log.info("test => {}", tunnelSession.isConnected());
-                                tunnelSession.delPortForwardingL(localPortMap.get(sessionId));
-
-                                Thread.sleep(100);
-                                tunnelSession.disconnect();
-                            }catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-                        disconnectSession(sessionId, session);
-
-                    } else if(((String) messageDto.getData()).startsWith("vi")) {
-                        String command = ((String) messageDto.getData());
-                        String fileName = command.substring(2).isEmpty() ? "" : command.split(" ")[1];
-                        session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
-                                .messageType(VI)
-                                .data(fileName)
-                                .build())));
-                    }else {
-                        sendCommandToShell(session, messageDto);
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
-                            .messageType(MessageType.COMMAND)
-                            .data("Error executing command: " + e.getMessage())
-                            .build())));
-                }
-            } else {
-                hasSession = false;
-            }
+//        if (messageDto.getMessageType().equals(MessageType.ENTER)) {
+//            String sessionId = messageDto.getSession();
+//            Session SSHSession = sessionMap.get(sessionId);
+//            if (SSHSession != null) {
+//                session.getAttributes().put("sshSession", SSHSession);
+//                pathMap.put(sessionId, "~"); // 초기 경로 설정
+//                startShellChannel(session, SSHSession, sessionId);
+//            } else {
+//                hasSession = false;
+//            }
+//            if(messageDto.getLocalPort() != null) {
+//                localPortMap.put(sessionId, messageDto.getLocalPort());
+//            }
+//
+//        } else if (messageDto.getMessageType().equals(MessageType.COMMAND)) {
+//            Session sshSession = (Session) session.getAttributes().get("sshSession");
+//            if (sshSession != null) {
+//                try {
+//
+//                    if(((String) messageDto.getData()).equals("exit")) {
+//                        String tunnelSessionId = "Tunnel_" + messageDto.getSession();
+//                        String sessionId = messageDto.getSession();
+//                        session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+//                                .messageType(MessageType.EXIT)
+//                                .data("")
+//                                .build())));
+//                        Session tunnelSession = sessionMap.get(tunnelSessionId);
+//                        if(tunnelSession != null) {
+//                            try {
+//                                System.out.println(localPortMap.get(sessionId));
+//                                log.info("tunnelSession => {}", tunnelSession.getHost());
+//                                log.info("localPort => {}", localPortMap.get(sessionId));
+//                                log.info("test => {}", tunnelSession.isConnected());
+//                                tunnelSession.delPortForwardingL(localPortMap.get(sessionId));
+//
+//                                Thread.sleep(100);
+//                                tunnelSession.disconnect();
+//                            }catch (Exception e) {
+//                                e.printStackTrace();
+//                            }
+//
+//                        }
+//                        disconnectSession(sessionId, session);
+//
+//                    } else if(((String) messageDto.getData()).startsWith("vi")) {
+//                        String command = ((String) messageDto.getData());
+//                        String fileName = command.substring(2).isEmpty() ? "" : command.split(" ")[1];
+//                        session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+//                                .messageType(VI)
+//                                .data(fileName)
+//                                .build())));
+//                    }else {
+//                        sendCommandToShell(session, messageDto);
+//                    }
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+//                            .messageType(MessageType.COMMAND)
+//                            .data("Error executing command: " + e.getMessage())
+//                            .build())));
+//                }
+//            } else {
+//                hasSession = false;
+//            }
         } else if (messageDto.getMessageType().equals(MessageType.AUTOCOMPLETE)) {
             Session sshSession = (Session) session.getAttributes().get("sshSession");
             if (sshSession != null) {
@@ -175,22 +175,22 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
             } else {
                 hasSession = false;
             }
-        } else if (messageDto.getMessageType().equals(MessageType.SIGNAL)) {
-            Session sshSession = (Session) session.getAttributes().get("sshSession");
-            if (sshSession != null) {
-                try {
-                    sendSignalToShell(session, sshSession, messageDto);
-                } catch (Exception e) {
-                    session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
-                            .messageType(MessageType.COMMAND)
-                            .data("Error sending signal: " + e.getMessage())
-                            .build())));
-                }
-            } else {
-                hasSession = false;
-            }
-        } else if(messageDto.getMessageType().equals(MessageType.EXIT)) {
+        } else if (messageDto.getMessageType().equals(MessageType.SIGNAL))
 
+    {
+        Session sshSession = (Session) session.getAttributes().get("sshSession");
+        if (sshSession != null) {
+            try {
+                sendSignalToShell(session, sshSession, messageDto);
+            } catch (Exception e) {
+                session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+                        .messageType(MessageType.COMMAND)
+                        .data("Error sending signal: " + e.getMessage())
+                        .build())));
+            }
+        } else {
+            hasSession = false;
+        }
         } else if(messageDto.getMessageType().equals(MessageType.VI_OPERATION)) {
             handleFileOperation(session, messageDto);
         }  else if (messageDto.getMessageType().equals(MessageType.VI_CONTENT)) {
@@ -217,135 +217,135 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         session.close();
     }
 
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        String sessionId = (String) session.getAttributes().get("sessionId");
+//    @Override
+//    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+//        String sessionId = (String) session.getAttributes().get("sessionId");
+//
+//        String tunnelSessionId = "Tunnel_" + sessionId;
+//        if (sessionId != null) {
+//            Session sshSession = sessionMap.get(sessionId);
+//            if (sshSession != null) {
+//                sshSession.disconnect();
+//            }
+//            Session tunnelSession = sessionMap.get(tunnelSessionId);
+//            if(tunnelSession != null) {
+//                System.out.println(localPortMap.get(sessionId));
+//                log.info("tunnelSession => {}", tunnelSession.getHost());
+//                log.info("localPort => {}", localPortMap.get(sessionId));
+//                tunnelSession.delPortForwardingL(localPortMap.get(sessionId));
+//                Thread.sleep(100);
+//                tunnelSession.disconnect();
+//            }
+//            removeSession(sessionId);
+//        }
+//        super.afterConnectionClosed(session, status);
+//    }
 
-        String tunnelSessionId = "Tunnel_" + sessionId;
-        if (sessionId != null) {
-            Session sshSession = sessionMap.get(sessionId);
-            if (sshSession != null) {
-                sshSession.disconnect();
-            }
-            Session tunnelSession = sessionMap.get(tunnelSessionId);
-            if(tunnelSession != null) {
-                System.out.println(localPortMap.get(sessionId));
-                log.info("tunnelSession => {}", tunnelSession.getHost());
-                log.info("localPort => {}", localPortMap.get(sessionId));
-                tunnelSession.delPortForwardingL(localPortMap.get(sessionId));
-                Thread.sleep(100);
-                tunnelSession.disconnect();
-            }
-            removeSession(sessionId);
-        }
-        super.afterConnectionClosed(session, status);
-    }
+//    private void startShellChannel(WebSocketSession webSocketSession, Session sshSession, String sessionId) throws JSchException, IOException {
+//        ChannelShell channel = (ChannelShell) sshSession.openChannel("shell");
+//
+//        // Set up input and output streams for the shell channel
+//        PipedInputStream pipedIn = new PipedInputStream();
+//        PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
+//        channel.setInputStream(new BufferedInputStream(pipedIn));
+//
+//        PipedInputStream pipedErrIn = new PipedInputStream();
+//        PipedOutputStream pipedErrOut = new PipedOutputStream(pipedErrIn);
+//
+//        // Set output streams to send data back to WebSocket
+//        channel.setOutputStream(new WebSocketOutputStream(webSocketSession));
+//        channel.setExtOutputStream(new WebSocketOutputStream(webSocketSession));
+//
+//        shellChannelMap.put(sessionId, channel);
+//        channel.connect();
+//
+//        // Read from shell and send to WebSocket
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(channel.getInputStream(), StandardCharsets.UTF_8));
+//        BufferedReader errReader = new BufferedReader(new InputStreamReader(pipedErrIn, StandardCharsets.UTF_8));
+//
+//        Thread outputThread = new Thread(() -> {
+//            try {
+//                String line;
+//                int lineCount = 0;
+//                while ((line = reader.readLine()) != null) {
+//                    lineCount++;
+//                    String sanitizedLine = sanitizeAnsiCodes(line);
+//                    if (sanitizedLine.contains("[baroka_path]")) {
+//                        String newPath = sanitizedLine.split(":")[1];
+//                        pathMap.put(sessionId, newPath);
+//
+//                        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.PATH, newPath))));
+//                    } else if (sanitizedLine.contains("Preparing")) {
+//                        synchronized (webSocketSession) {
+//                            webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.RESULT, sanitizedLine))));
+//                        }
+//                    } else {
+//                        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.RESULT, sanitizedLine))));
+//                    }
+//
+//                }
+//
+//            } catch (IOException e) {
+//                log.error("Error reading from shell channel", e);
+//            }
+//        });
+//
+//        // Read from shell error stream and send to WebSocket
+//        Thread errorThread = new Thread(() -> {
+//            try {
+//                String line;
+//                while ((line = errReader.readLine()) != null) {
+//                    String sanitizedLine = sanitizeAnsiCodes(line);
+//                    synchronized (webSocketSession) {
+//                        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.RESULT, sanitizedLine))));
+//                    }
+//                }
+//            } catch (IOException e) {
+//                log.error("Error reading from shell error stream", e);
+//            }
+//        });
+//
+//        outputThread.start();
+//        errorThread.start();
+//
+//        // Store threads to interrupt later
+//        webSocketSession.getAttributes().put("outputThread", outputThread);
+//        webSocketSession.getAttributes().put("errorThread", errorThread);
+//    }
 
-    private void startShellChannel(WebSocketSession webSocketSession, Session sshSession, String sessionId) throws JSchException, IOException {
-        ChannelShell channel = (ChannelShell) sshSession.openChannel("shell");
-
-        // Set up input and output streams for the shell channel
-        PipedInputStream pipedIn = new PipedInputStream();
-        PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
-        channel.setInputStream(new BufferedInputStream(pipedIn));
-
-        PipedInputStream pipedErrIn = new PipedInputStream();
-        PipedOutputStream pipedErrOut = new PipedOutputStream(pipedErrIn);
-
-        // Set output streams to send data back to WebSocket
-        channel.setOutputStream(new WebSocketOutputStream(webSocketSession));
-        channel.setExtOutputStream(new WebSocketOutputStream(webSocketSession));
-
-        shellChannelMap.put(sessionId, channel);
-        channel.connect();
-
-        // Read from shell and send to WebSocket
-        BufferedReader reader = new BufferedReader(new InputStreamReader(channel.getInputStream(), StandardCharsets.UTF_8));
-        BufferedReader errReader = new BufferedReader(new InputStreamReader(pipedErrIn, StandardCharsets.UTF_8));
-
-        Thread outputThread = new Thread(() -> {
-            try {
-                String line;
-                int lineCount = 0;
-                while ((line = reader.readLine()) != null) {
-                    lineCount++;
-                    String sanitizedLine = sanitizeAnsiCodes(line);
-                    if (sanitizedLine.contains("[baroka_path]")) {
-                        String newPath = sanitizedLine.split(":")[1];
-                        pathMap.put(sessionId, newPath);
-
-                        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.PATH, newPath))));
-                    } else if (sanitizedLine.contains("Preparing")) {
-                        synchronized (webSocketSession) {
-                            webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.RESULT, sanitizedLine))));
-                        }
-                    } else {
-                        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.RESULT, sanitizedLine))));
-                    }
-
-                }
-
-            } catch (IOException e) {
-                log.error("Error reading from shell channel", e);
-            }
-        });
-
-        // Read from shell error stream and send to WebSocket
-        Thread errorThread = new Thread(() -> {
-            try {
-                String line;
-                while ((line = errReader.readLine()) != null) {
-                    String sanitizedLine = sanitizeAnsiCodes(line);
-                    synchronized (webSocketSession) {
-                        webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(new Message<>(sessionId, MessageType.RESULT, sanitizedLine))));
-                    }
-                }
-            } catch (IOException e) {
-                log.error("Error reading from shell error stream", e);
-            }
-        });
-
-        outputThread.start();
-        errorThread.start();
-
-        // Store threads to interrupt later
-        webSocketSession.getAttributes().put("outputThread", outputThread);
-        webSocketSession.getAttributes().put("errorThread", errorThread);
-    }
-
-    private void sendCommandToShell(WebSocketSession webSocketSession, Message messageDto) throws IOException, JSchException {
-        String command = (String) messageDto.getData();
-        String sessionId = messageDto.getSession();
-        ChannelShell channel = shellChannelMap.get(sessionId);
-
-        if (channel != null) {
-            try {
-                OutputStream outputStream = channel.getOutputStream();
-
-                if(command.startsWith("vi") || command.startsWith("nano")) {
-                    outputStream.write("echo \"[Preparing] This feature is being prepared.\"\n".getBytes(StandardCharsets.UTF_8));
-                    outputStream.flush();
-                } else if (command.startsWith("cd ")) {
-                    outputStream.write((command + "\n").getBytes(StandardCharsets.UTF_8));
-                    outputStream.flush();
-                    outputStream.write("echo \"[baroka_path]:\"  $(pwd)\n".getBytes(StandardCharsets.UTF_8));
-                    outputStream.flush();
-                } else {
-                    outputStream.write((command + "\n").getBytes(StandardCharsets.UTF_8));
-                    outputStream.flush();
-                }
-
-
-            } catch (IOException e) {
-                // 명령어 실행 중 예외 발생 시 오류 메시지 전송
-                webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(
-                        Message.builder().messageType(MessageType.COMMAND)
-                                .data("Error executing command: " + e.getMessage())
-                                .build())));
-                log.error("Error executing command for session {}: {}", sessionId, e.getMessage(), e);
-            }
-        }
-    }
+//    private void sendCommandToShell(WebSocketSession webSocketSession, Message messageDto) throws IOException, JSchException {
+//        String command = (String) messageDto.getData();
+//        String sessionId = messageDto.getSession();
+//        ChannelShell channel = shellChannelMap.get(sessionId);
+//
+//        if (channel != null) {
+//            try {
+//                OutputStream outputStream = channel.getOutputStream();
+//
+//                if(command.startsWith("vi") || command.startsWith("nano")) {
+//                    outputStream.write("echo \"[Preparing] This feature is being prepared.\"\n".getBytes(StandardCharsets.UTF_8));
+//                    outputStream.flush();
+//                } else if (command.startsWith("cd ")) {
+//                    outputStream.write((command + "\n").getBytes(StandardCharsets.UTF_8));
+//                    outputStream.flush();
+//                    outputStream.write("echo \"[baroka_path]:\"  $(pwd)\n".getBytes(StandardCharsets.UTF_8));
+//                    outputStream.flush();
+//                } else {
+//                    outputStream.write((command + "\n").getBytes(StandardCharsets.UTF_8));
+//                    outputStream.flush();
+//                }
+//
+//
+//            } catch (IOException e) {
+//                // 명령어 실행 중 예외 발생 시 오류 메시지 전송
+//                webSocketSession.sendMessage(new TextMessage(mapper.writeValueAsString(
+//                        Message.builder().messageType(MessageType.COMMAND)
+//                                .data("Error executing command: " + e.getMessage())
+//                                .build())));
+//                log.error("Error executing command for session {}: {}", sessionId, e.getMessage(), e);
+//            }
+//        }
+//    }
 
 
     private void autoCompleteCommand(WebSocketSession webSocketSession, Session sshSession, Message<String> messageDto) throws IOException, JSchException {
@@ -411,44 +411,44 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         return sessionMap.get(sessionId);
     }
 
-    public static void removeSession(String sessionId) {
-        sessionMap.remove(sessionId);
-        ChannelShell channel = shellChannelMap.remove(sessionId);
-        if (channel != null) {
-            channel.disconnect();
-        }
-    }
+//    public static void removeSession(String sessionId) {
+//        sessionMap.remove(sessionId);
+//        ChannelShell channel = shellChannelMap.remove(sessionId);
+//        if (channel != null) {
+//            channel.disconnect();
+//        }
+//    }
 
-    private void doACK(WebSocketSession session) {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executor.put(session.getId(), executorService);
-        missedACK.put(session.getId(), 0);
-
-        executorService.scheduleAtFixedRate(() -> {
-            try {
-                if (session.isOpen()) {
-                    Integer missedCount = missedACK.getOrDefault(session.getId(), 0);
-                    if (missedCount >= messagingConfig.getAckLimitCount()) {
-                        session.close();
-                        executorService.shutdown();
-                        executor.remove(session.getId());
-                        missedACK.remove(session.getId());
-                    } else {
-                        session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
-                                .messageType(MessageType.ACK)
-                                .build())));
-                        missedACK.put(session.getId(), missedCount + 1);
-                    }
-                } else {
-                    executorService.shutdown();
-                    executor.remove(session.getId());
-                    missedACK.remove(session.getId());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, 0, messagingConfig.getAckTime(), TimeUnit.MILLISECONDS);
-    }
+//    private void doACK(WebSocketSession session) {
+//        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+//        executor.put(session.getId(), executorService);
+//        missedACK.put(session.getId(), 0);
+//
+//        executorService.scheduleAtFixedRate(() -> {
+//            try {
+//                if (session.isOpen()) {
+//                    Integer missedCount = missedACK.getOrDefault(session.getId(), 0);
+//                    if (missedCount >= messagingConfig.getAckLimitCount()) {
+//                        session.close();
+//                        executorService.shutdown();
+//                        executor.remove(session.getId());
+//                        missedACK.remove(session.getId());
+//                    } else {
+//                        session.sendMessage(new TextMessage(mapper.writeValueAsString(Message.builder()
+//                                .messageType(MessageType.ACK)
+//                                .build())));
+//                        missedACK.put(session.getId(), missedCount + 1);
+//                    }
+//                } else {
+//                    executorService.shutdown();
+//                    executor.remove(session.getId());
+//                    missedACK.remove(session.getId());
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }, 0, messagingConfig.getAckTime(), TimeUnit.MILLISECONDS);
+//    }
 
 
     private String executeCommand(Session session, String command) throws JSchException, IOException {
@@ -463,14 +463,14 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         return response;
     }
 
-    private void missedACKClear(String sessionId) {
-        missedACK.put(sessionId, 0);
-    }
+//    private void missedACKClear(String sessionId) {
+//        missedACK.put(sessionId, 0);
+//    }
 
-    private String sanitizeAnsiCodes(String input) {
-        // Remove ANSI escape codes and other control characters
-        return ANSI_PATTERN.matcher(input).replaceAll("");
-    }
+//    private String sanitizeAnsiCodes(String input) {
+//        // Remove ANSI escape codes and other control characters
+//        return ANSI_PATTERN.matcher(input).replaceAll("");
+//    }
 
     private void handleFileOperation(WebSocketSession session, Message messageDto) throws IOException, JSchException {
         Gson gson = new Gson();
@@ -582,21 +582,21 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
                 .build())));
     }
 
-    private static class WebSocketOutputStream extends OutputStream {
-        private final WebSocketSession session;
-
-        public WebSocketOutputStream(WebSocketSession session) {
-            this.session = session;
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            session.sendMessage(new TextMessage(new byte[]{(byte) b}));
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            session.sendMessage(new TextMessage(new String(b, off, len, StandardCharsets.UTF_8)));
-        }
-    }
+//    private static class WebSocketOutputStream extends OutputStream {
+//        private final WebSocketSession session;
+//
+//        public WebSocketOutputStream(WebSocketSession session) {
+//            this.session = session;
+//        }
+//
+//        @Override
+//        public void write(int b) throws IOException {
+//            session.sendMessage(new TextMessage(new byte[]{(byte) b}));
+//        }
+//
+//        @Override
+//        public void write(byte[] b, int off, int len) throws IOException {
+//            session.sendMessage(new TextMessage(new String(b, off, len, StandardCharsets.UTF_8)));
+//        }
+//    }
 }
