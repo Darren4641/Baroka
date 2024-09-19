@@ -6,7 +6,7 @@ import java.io.Serializable
 @Builder
 data class Message<T> (
     val session: String? = null,
-    val messageType: MessageType,
+    val messageType: MessageType? = null,
     val remoteDir: String? = null,
     val localPort: Int? = null,
     val data: T? = null
@@ -34,9 +34,9 @@ enum class MessageType {
 
 @Builder
 data class VI (
-    val operation: String,
-    val title: String,
-    val content: String,
-    val remoteDir: String,
-    val isBaroka: Boolean
+    val operation: String? = null,
+    val title: String? = null,
+    val content: String? = null,
+    val remoteDir: String? = null,
+    val isBaroka: Boolean? = null
 )

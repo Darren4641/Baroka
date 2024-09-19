@@ -2,11 +2,11 @@ package io.baroka.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.jcraft.jsch.Channel
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.Session
 import io.baroka.component.SSHConnection
 import io.baroka.entity.Host
+import io.baroka.exception.InvalidException
 import io.baroka.handler.TerminalWebSocketHandler
 import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Service
@@ -15,7 +15,6 @@ import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.*
-import java.util.function.Predicate
 import kotlin.collections.ArrayList
 
 @Service
@@ -131,16 +130,21 @@ class BarokaService (
         }
     }
 
-    fun getShell(sessionId: String, path: String) : List<String> {
+    fun getBarokaShell(sessionId: String, path: String) : List<String> {
         val session = TerminalWebSocketHandler.getSession(sessionId)
-        executeCommand(session, "mkdir -p " + path)
 
-        val shellFiles = executeCommand(session, "sh -c 'find " + path + " -type f -name \"*.sh\" -perm /111'")
+        session?.let {
+            executeCommand(session, "mkdir -p " + path)
 
-        return shellFiles.map{ shell  ->
+            val shellFiles = executeCommand(session, "sh -c 'find " + path + " -type f -name \"*.sh\" -perm /111'")
+
+            return shellFiles.map{ shell  ->
                 val splitShell = shell.split("/")
                 splitShell[splitShell.size - 1]
             }
+        }
+
+        throw InvalidException("Not found ssh session")
     }
 
     private fun  executeCommand(session: Session, command: String) : List<String> {

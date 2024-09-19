@@ -87,10 +87,13 @@ class EnterService {
                                 data = sanitizedLine))))
                         }
                     } else {
-                        webSocketSession.sendMessage(TextMessage(mapper.writeValueAsString(Message<Any>(
-                            session = sessionId,
-                            messageType = MessageType.RESULT,
-                            data = sanitizedLine))))
+                        synchronized(webSocketSession) {
+                            webSocketSession.sendMessage(TextMessage(mapper.writeValueAsString(Message<Any>(
+                                session = sessionId,
+                                messageType = MessageType.RESULT,
+                                data = sanitizedLine))))
+                        }
+
                     }
                 }
             } catch (e: IOException) {

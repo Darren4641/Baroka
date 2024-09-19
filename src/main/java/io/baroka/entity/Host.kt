@@ -1,16 +1,15 @@
 package io.baroka.entity
 
-import groovy.transform.builder.Builder
 
 
-data class Host(
-    val idx: String,
-    val title: String,
-    val username: String,
-    val serverHost: String,
-    val serverPort: Int,
-    val password: String?,
-    val pem: String?,
+class Host(
+    val idx: String? = null,
+    val title: String? = null,
+    val username: String? = null,
+    val serverHost: String? = null,
+    val serverPort: Int? = null,
+    val password: String? = null,
+    val pem: String? = null,
     val tunnelUsername: String? = null,
     val tunnelHost: String? = null,
     val tunnelPort: Int? = null,
@@ -18,5 +17,4 @@ data class Host(
     var tunnelPassword: String? = null,
     val tunnelPem: String? = null
 ){
-
 }

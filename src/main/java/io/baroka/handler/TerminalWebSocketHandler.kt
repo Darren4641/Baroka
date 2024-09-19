@@ -6,8 +6,7 @@ import com.jcraft.jsch.Session
 import io.baroka.config.MessagingConfig
 import io.baroka.model.Message
 import io.baroka.model.MessageType
-import io.baroka.service.CommandService
-import io.baroka.service.EnterService
+import io.baroka.service.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
@@ -26,6 +25,9 @@ class TerminalWebSocketHandler (
     val messageConfig : MessagingConfig,
     val enterService: EnterService,
     val commandService: CommandService,
+    val autoCompleteService: AutoCompleteService,
+    val signalService: SignalService,
+    val viService: ViService,
     @Value("\${baroka.path}")
     val path: String
 ) : TextWebSocketHandler() {
@@ -44,6 +46,8 @@ class TerminalWebSocketHandler (
         fun addSession(sessionId: String, session: Session) {
             sessionMap.put(sessionId, session)
         }
+
+        fun getSession(sessionId: String) : Session? = sessionMap.get(sessionId)
     }
 
 
@@ -108,14 +112,46 @@ class TerminalWebSocketHandler (
             }
 
         } else if(messageDto.messageType == MessageType.AUTOCOMPLETE) {
-
+            val sshSession = session.attributes["sshSession"] as Session?
+            if(sshSession != null) {
+                try {
+                    autoCompleteService.autoCompleteCommand(session, sshSession, messageDto as Message<String>)
+                } catch (e: Exception) {
+                    session.sendMessage(TextMessage(mapper.writeValueAsString(Message(
+                        messageType = MessageType.COMMAND,
+                        data = "Error during autocomplete: " + e.message))))
+                }
+            } else {
+                hasSession = false
+            }
         } else if(messageDto.messageType == MessageType.SIGNAL) {
-
+            val sshSession = session.attributes["sshSession"] as Session?
+            if(sshSession != null) {
+                try {
+                    signalService.sendSignalToShell(session, sshSession, messageDto as Message<String>)
+                } catch (e: Exception) {
+                    session.sendMessage(TextMessage(mapper.writeValueAsString(Message(
+                        messageType = MessageType.COMMAND,
+                        data = "Error sending signal: " + e.message))))
+                }
+            } else {
+                hasSession = false
+            }
         } else if(messageDto.messageType == MessageType.VI_OPERATION) {
-
+            viService.handleFileOperation(session, message as Message<String>)
         } else if(messageDto.messageType == MessageType.VI_CONTENT) {
-
+            viService.fetchFileContent(session, message as Message<String>)
         }
+
+        synchronized(session) {
+            if(!hasSession) {
+                session.sendMessage(TextMessage(mapper.writeValueAsString(Message(
+                    messageType = MessageType.COMMAND,
+                    data = "No SSH session available"))))
+                session.close()
+            }
+        }
+
     }
 
     @Override
@@ -136,7 +172,6 @@ class TerminalWebSocketHandler (
         }
         super.afterConnectionClosed(session, status)
     }
-
 
 
 

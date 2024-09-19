@@ -74,7 +74,7 @@ class BarokaController (
             val sessionId = UUID.randomUUID().toString()
             TerminalWebSocketHandler.addSession(sessionId, session)
 
-            val barokaList = barokaService.getShell(sessionId, path)
+            val barokaList = barokaService.getBarokaShell(sessionId, path)
             addBarokaAttributes(
                 model = model,
                 sessionId = sessionId,
@@ -111,7 +111,7 @@ class BarokaController (
             val sessionId = UUID.randomUUID().toString()
             TerminalWebSocketHandler.addSession(sessionId, session)
 
-            val barokaList = barokaService.getShell(sessionId, path)
+            val barokaList = barokaService.getBarokaShell(sessionId, path)
 
             addBarokaAttributes(
                 model = model,
@@ -182,7 +182,7 @@ class BarokaController (
                 destinationPemPath = destinationPemKey?.takeIf { !it.isEmpty }?.let { uploadPem(it) },
                 localPort = localPort)
 
-            val barokaList = barokaService.getShell(sessionId, path)
+            val barokaList = barokaService.getBarokaShell(sessionId, path)
             addBarokaAttributes(
                 model = model,
                 sessionId = sessionId,
@@ -236,7 +236,7 @@ class BarokaController (
             TerminalWebSocketHandler.addSession("Tunnel_$sessionId", tunnelSession)
             TerminalWebSocketHandler.addSession(sessionId, destinationSession)
 
-            val barokaList = barokaService.getShell(sessionId, path)
+            val barokaList = barokaService.getBarokaShell(sessionId, path)
             addBarokaAttributes(
                 model = model,
                 sessionId = sessionId,
@@ -254,7 +254,7 @@ class BarokaController (
 
     @GetMapping("/file-list")
     fun getFileList(@RequestParam("sessionId") sessionId: String, model: Model) : String {
-        val barokaList = barokaService.getShell(sessionId, path)
+        val barokaList = barokaService.getBarokaShell(sessionId, path)
         model.addAttribute("barokaFiles", barokaList)
         model.addAttribute("colors", generateRandomColors(barokaList.size))
         return "terminal :: file-list"
