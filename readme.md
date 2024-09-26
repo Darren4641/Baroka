@@ -5,7 +5,7 @@ _                   _          ___  ___  _ _
 |___/<___||_|  \___/|_\_\<___| <___/<___/|_|_|
 ```
 ---
-latest ver. 1.7.2
+latest ver. 2.0.1
 ## Web기반 SSH / Tunnel SSH 바로가! ↗️
 # ![LOGO](img/baroka.gif)
 
