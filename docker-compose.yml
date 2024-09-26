@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: zxz4641/baroka:2.0.0
+    image: zxz4641/baroka:2.0.1
     container_name: baroka
     environment:
       - BAROKA_PATH=~/.baroka
