@@ -137,7 +137,7 @@ class BarokaService (
             executeCommand(session, "mkdir -p " + path)
 
             val shellFiles = executeCommand(session, "sh -c 'find " + path + " -type f -name \"*.sh\" -perm /111'")
-
+            println("shellFiles ${shellFiles}")
             return shellFiles.map{ shell  ->
                 val splitShell = shell.split("/")
                 splitShell[splitShell.size - 1]
@@ -156,9 +156,10 @@ class BarokaService (
 
         var reader = BufferedReader(InputStreamReader(inputStream))
         val lines = ArrayList<String>().toMutableList()
-        var line: String?
-        while(reader.readLine().also { line = it } != null) {
-            lines.add(line!!)
+        var line: String? = reader.readLine()
+        while (line != null) {
+            lines.add(line)
+            line = reader.readLine() // 다음 줄 읽기
         }
 
         channel.disconnect()

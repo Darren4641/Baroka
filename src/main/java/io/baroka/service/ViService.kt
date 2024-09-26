@@ -26,8 +26,9 @@ class ViService {
         val sessionId = messageDto.session
 
         try {
+
             when(vi.operation) {
-                "SAVE" -> saveFileContent(sessionId!!, vi.title!!, vi.content!!, vi.remoteDir!!, vi.isBaroka!!)
+                "SAVE" -> saveFileContent(sessionId!!, vi.title!!, vi.content!!, vi.remoteDir!!, vi.isBaroka!!, vi.sudo)
             }
         } catch (e: Exception) {
             webSocketSession.sendMessage(
@@ -60,15 +61,21 @@ class ViService {
         val channel = sshSession.openChannel("exec") as ChannelExec
         val responseStream = ByteArrayOutputStream()
         channel.setOutputStream(responseStream)
-        channel.setCommand("cat " + vi.remoteDir + "/" + vi.title)
+        if(vi.sudo) {
+            channel.setCommand("sudo cat " + vi.remoteDir + "/" + vi.title)
+        } else {
+            channel.setCommand("cat " + vi.remoteDir + "/" + vi.title)
+        }
+
         channel.connect()
 
         val inputStream = channel.inputStream
         val reader = BufferedReader(InputStreamReader(inputStream))
         val fileContent = StringBuilder()
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
+        var line: String? = reader.readLine()
+        while (line != null) {
             fileContent.append(line).append("\n")
+            line = reader.readLine() // 다음 줄 읽기
         }
 
         channel.disconnect()
@@ -82,7 +89,7 @@ class ViService {
 
     }
 
-    private fun saveFileContent(sessionId: String, title: String, content: String, remoteDir: String, isBaroka: Boolean) {
+    private fun saveFileContent(sessionId: String, title: String, content: String, remoteDir: String, isBaroka: Boolean, isSudo: Boolean) {
         val session = getSession(sessionId)
         if(session == null)
             throw InvalidException("SSH session not found")
@@ -96,7 +103,9 @@ class ViService {
         }
 
         val remoteFilePath = remoteDir + "/" + fileTitle
-        val command = String.format("cat > %s << 'EOF'\n%s\nEOF\n", remoteFilePath, content)
+        val command = String.format("echo -e '%s' > %s", content.replace("'", "'\\''"), remoteFilePath)
+
+        println("command = ${command}")
 
         val channel = session.openChannel("exec") as ChannelExec
 

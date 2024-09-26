@@ -112,7 +112,7 @@ class BarokaController (
             TerminalWebSocketHandler.addSession(sessionId, session)
 
             val barokaList = barokaService.getBarokaShell(sessionId, path)
-
+            println("barokaList ${barokaList}")
             addBarokaAttributes(
                 model = model,
                 sessionId = sessionId,

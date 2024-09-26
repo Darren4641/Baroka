@@ -38,10 +38,19 @@ class CommandService {
 
     fun viCommand(webSocketSession: WebSocketSession, session: Session, messageDto: Message<*>) {
         val command = messageDto.data as String
-        val fileName = if (command.substring(2).isEmpty()) "" else command.split(" ")[1]
+        var isSudo = false
+        var fileName: String
+        if(command.contains("sudo")) {
+            isSudo = true
+            fileName = if (command.substring(7).isEmpty()) "" else command.split(" ")[2]
+        } else {
+            fileName = if (command.substring(2).isEmpty()) "" else command.split(" ")[1]
+        }
+
         webSocketSession.sendMessage(TextMessage(mapper.writeValueAsString(Message(
             messageType = MessageType.VI,
-            data = fileName))))
+            data = fileName,
+            sudo = isSudo))))
     }
 
     fun command(webSocketSession: WebSocketSession, session: Session, messageDto: Message<*>) {

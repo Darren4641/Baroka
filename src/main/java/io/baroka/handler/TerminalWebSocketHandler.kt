@@ -72,15 +72,16 @@ class TerminalWebSocketHandler (
 
         var hasSession = true
         if(messageDto.messageType == MessageType.ENTER) {
-            val SSHSession = sessionMap.get(session.id)
+            val sessionId = messageDto.session as String
+            val SSHSession = sessionMap.get(sessionId)
             if(SSHSession != null) {
                 session.attributes.put("sshSession", SSHSession)
-                pathMap.put(session.id, "~")
-                enterService.startShellChannel(session, SSHSession, session.id)
+                pathMap.put(sessionId, "~")
+                enterService.startShellChannel(session, SSHSession, sessionId)
             } else {
                 hasSession = false
             }
-            if(messageDto.localPort != null) localPortMap.put(session.id, messageDto.localPort)
+            if(messageDto.localPort != null) localPortMap.put(sessionId, messageDto.localPort)
         } else if(messageDto.messageType == MessageType.COMMAND) {
             val sshSession = session.attributes["sshSession"] as Session?
             if (sshSession != null) {
@@ -112,6 +113,7 @@ class TerminalWebSocketHandler (
             }
 
         } else if(messageDto.messageType == MessageType.AUTOCOMPLETE) {
+
             val sshSession = session.attributes["sshSession"] as Session?
             if(sshSession != null) {
                 try {
@@ -138,9 +140,20 @@ class TerminalWebSocketHandler (
                 hasSession = false
             }
         } else if(messageDto.messageType == MessageType.VI_OPERATION) {
-            viService.handleFileOperation(session, message as Message<String>)
+            viService.handleFileOperation(session, messageDto as Message<String>)
         } else if(messageDto.messageType == MessageType.VI_CONTENT) {
-            viService.fetchFileContent(session, message as Message<String>)
+            if(messageDto.sudo!!) {
+                session.sendMessage(
+                    TextMessage(
+                        mapper.writeValueAsString(Message(
+                            messageType = MessageType.RESULT,
+                            data = "It does not provide [sudo] functionality.")))
+                )
+                return
+            }else {
+                viService.fetchFileContent(session, messageDto as Message<String>)
+            }
+
         }
 
         synchronized(session) {

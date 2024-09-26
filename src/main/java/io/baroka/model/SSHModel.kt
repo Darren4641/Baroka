@@ -9,7 +9,9 @@ data class Message<T> (
     val messageType: MessageType? = null,
     val remoteDir: String? = null,
     val localPort: Int? = null,
+    val sudo: Boolean? = null,
     val data: T? = null
+
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L
@@ -38,5 +40,6 @@ data class VI (
     val title: String? = null,
     val content: String? = null,
     val remoteDir: String? = null,
-    val isBaroka: Boolean? = null
+    val isBaroka: Boolean? = null,
+    val sudo: Boolean
 )

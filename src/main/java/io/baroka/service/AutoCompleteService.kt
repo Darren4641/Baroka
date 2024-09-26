@@ -22,7 +22,6 @@ class AutoCompleteService {
         val command = messageDto.data!!
         val sessionId = messageDto.session
         val currentPath = pathMap.getOrDefault(sessionId, "~")
-
         //파일 이름 추출
         val fileNamePrefix = if(command.contains(" ")) command.substring(command.lastIndexOf(' ') + 1) else command
 
@@ -35,12 +34,18 @@ class AutoCompleteService {
         val inputStream = channelExec.inputStream
         var reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
         val autoCompleteResult = StringBuilder()
-        lateinit var line: String
-        while (reader.readLine().also { line = it } != null) {
+        var line: String? = reader.readLine()
+        while (line != null) {
             autoCompleteResult.append(line).append("\n")
+            line = reader.readLine() // 다음 줄 읽기
         }
 
-        webSocketSession.sendMessage(TextMessage(mapper.writeValueAsString(Message<String>(sessionId, MessageType.AUTOCOMPLETE, autoCompleteResult.toString()))))
+        webSocketSession.sendMessage(TextMessage(mapper.writeValueAsString(
+            Message(
+            session = sessionId,
+            messageType =  MessageType.AUTOCOMPLETE,
+            data = autoCompleteResult.toString())
+        )))
 
         channelExec.disconnect()
     }
