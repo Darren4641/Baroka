@@ -258,6 +258,7 @@
         let currentPath = "~"; // 초기 경로
         let savePath = currentPath;
         let isBaroka = false;
+        let isSudo = false;
         let barokaPath = [[${barokaPath}]];
         const username = [[${username}]]; // 타임리프를 통해 서버에서 사용자 이름을 전달받음
         const sessionId = [[${sessionId}]]; // 타임리프를 통해 서버에서 세션 ID를 전달받음
@@ -275,7 +276,8 @@
                 const enterMessage = {
                     session: sessionId,
                     localPort: localPort,
-                    messageType: "ENTER"
+                    messageType: "ENTER",
+                    sudo: false
                 };
                 socket.send(JSON.stringify(enterMessage));
                 appendOutput("SSH Session Connected\n", 'output-line');
@@ -288,7 +290,12 @@
                         appendOutput(message.data, 'output-line');
                     }
                 } else if (message.messageType === "VI") {
-                    openEditor(message.data);
+                    if(message.sudo) {
+                        appendOutput("It does not provide [sudo] functionality.", 'output-line');
+                    } else {
+                        openEditor(message.data);
+                    }
+
                 } else if(message.messageType === "VI_CONTENT") {
                     console.log("content = " + message.data);
                     document.getElementById('modalEditor').value = message.data;
@@ -304,15 +311,15 @@
 
             socket.onclose = function() {
                 console.log("WebSocket connection closed");
-                if (reconnectAttempts < maxReconnectAttempts) {
-                    setTimeout(() => {
-                        reconnectAttempts++;
-                        console.log(`Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`);
-                        connectWebSocket();
-                    }, 1000 * reconnectAttempts); // 점진적으로 재연결 시도 간격을 증가
-                } else {
-                    appendOutput("Failed to reconnect after multiple attempts. Please refresh the page.\n", 'error-line');
-                }
+                // if (reconnectAttempts < maxReconnectAttempts) {
+                //     setTimeout(() => {
+                //         reconnectAttempts++;
+                //         console.log(`Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`);
+                //         connectWebSocket();
+                //     }, 1000 * reconnectAttempts); // 점진적으로 재연결 시도 간격을 증가
+                // } else {
+                //     appendOutput("Failed to reconnect after multiple attempts. Please refresh the page.\n", 'error-line');
+                // }
             };
 
             socket.onerror = function(error) {
@@ -376,6 +383,7 @@
         }
 
         function handleAutocomplete(data) {
+            console.log(data)
             const commandInput = document.getElementById('command');
             const currentCommand = commandInput.value;
             const autoCompleteOptions = data.split("\n").filter(opt => opt.trim() !== "");
@@ -538,7 +546,6 @@
         function openEditor(fileName, element) {
             document.getElementById('editModal').style.display = 'flex';
             const modalTitle = document.getElementById('modalTitle');
-            console.log("@: " + fileName);
             if (fileName) {
                 if(fileName === 'baroka') {
                     console.log("@: baroka here");
@@ -570,6 +577,7 @@
         function closeEditor() {
             document.getElementById('editModal').style.display = 'none';
             document.getElementById('modalTitle').value = '';
+            isSudo = false
         }
 
         function fetchFileContent(title, currentPath) {
@@ -577,12 +585,14 @@
             // 예: WebSocket을 사용하여 파일 내용을 요청하고 받음
             const vi = {
                 title: title,
-                remoteDir: currentPath
+                remoteDir: currentPath,
+                sudo: isSudo
             }
             const message = {
                 session: sessionId,
                 messageType: "VI_CONTENT",
-                data: JSON.stringify(vi)
+                data: JSON.stringify(vi),
+                sudo: isSudo
             };
             socket.send(JSON.stringify(message));
         }
@@ -594,12 +604,14 @@
         function saveAndQuit() {
             const title = document.getElementById('modalTitle').value;
             const content = document.getElementById('modalEditor').value;
+
             const vi = {
                 operation: "SAVE",
                 title: title,
                 content: content,
                 remoteDir: savePath,
-                isBaroka: isBaroka
+                isBaroka: isBaroka,
+                isSudo: isSudo
             }
             const message = {
                 session: sessionId,

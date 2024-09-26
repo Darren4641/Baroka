@@ -593,6 +593,10 @@
 
     function clearModalFields() {
         // 모든 입력 필드 초기화
+        document.getElementById("title").reset();
+        document.getElementById("host").reset();
+        document.getElementById("port").reset()
+        document.getElementById("username").reset()
         document.getElementById("sshForm").reset();
         document.getElementById("tunnelForm").reset();
         document.getElementById("passwordField").style.display = "none";
